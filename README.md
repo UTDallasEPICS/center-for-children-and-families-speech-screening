@@ -26,7 +26,7 @@ Starting Spring 2026
 
 ```bash
 git clone https://github.com/UTDallasEPICS/center-for-children-and-families-speech-screening.git
-cd nuxt-template
+cd center-for-children-and-families-speech-screening
 ```
 
 ### 2. Install dependencies
@@ -58,19 +58,24 @@ Open `.env` and configure the following:
 Initialize your SQLite database and run migrations.
 
 ```bash
-pnpm dlx prisma migrate dev --name init
+npx prisma migrate dev
 ```
 
 Generate the Prisma client
 
 ```bash
-pnpm dlx prisma generate
+npx prisma generate
 ```
 
-To reset the database and run the seed script:
+Seed the database
+```bash
+npx prisma db seed
+```
+
+To reset the database:
 
 ```bash
-pnpm prisma:reset
+npx prisma migrate reset
 ```
 
 ### 5. Start the development server
