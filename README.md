@@ -26,7 +26,7 @@ Starting Spring 2026
 
 ```bash
 git clone https://github.com/UTDallasEPICS/center-for-children-and-families-speech-screening.git
-cd nuxt-template
+cd center-for-children-and-families-speech-screening
 ```
 
 ### 2. Install dependencies
