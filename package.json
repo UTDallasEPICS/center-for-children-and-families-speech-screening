@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "concurrently \"nuxt dev\" \"prisma studio\"",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "concurrently": "^9.2.1",
     "prettier": "3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "prisma": "^7.2.0",
