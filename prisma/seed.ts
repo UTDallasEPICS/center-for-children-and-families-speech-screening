@@ -1,5 +1,5 @@
-import { Param } from "@prisma/client/runtime/client"
-import { prisma } from "../server/utils/prisma"
+import { Param } from '@prisma/client/runtime/client'
+import { prisma } from '../server/utils/prisma'
 
 async function main() {
 	console.log('Start seeding...')

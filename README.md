@@ -72,10 +72,10 @@ Seed the database
 npx prisma db seed
 ```
 
-To reset the database:
+To reset and seed the database:
 
 ```bash
-npx prisma migrate reset
+pnpm prisma:reset
 ```
 
 ### 5. Start the development server
@@ -84,7 +84,21 @@ npx prisma migrate reset
 pnpm dev
 ```
 
-Your application will be available at `http://localhost:3000`.
+Your application will be available at `http://localhost:3000`. This command also starts **Prisma Studio** automatically.
+
+### 6. How to Login
+
+Login requires an email address that already exists in the database.
+
+- **Option A: Use the seeded user**
+  Go to `/auth` and log in with `alice@a.com`.
+- **Option B: Use your own email**
+  Update `prisma/seed.ts` with your email, then run `pnpm prisma:reset` to re-seed.
+
+**To get your OTP:**
+
+- Check your configured email inbox.
+- **Or**, check the **Prisma Studio** tab in your browser and look in the `Verification` table.
 
 ## Project Structure
 
