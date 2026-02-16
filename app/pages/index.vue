@@ -44,7 +44,10 @@
     <div class="max-w-7xl mx-auto px-6 py-10 w-full">
 
       <!-- FORM TYPE SELECTOR (Change for another time is make this dependent on current step being 0 so it only shows on preview) -->
-      <div class="flex items-center gap-3 mb-8">
+      <div 
+        class="flex items-center gap-3 mb-8"
+        v-if="currentStep < 2"
+       >
         <label class="text-sm font-medium text-gray-500">Form Type:</label>
         <!-- Update form selection-->
         <USelect
@@ -171,10 +174,10 @@
               >
                 &larr; Back
               </UButton>
-              <!-- Disabled for now but CHANGE LATER!!!!!!!!-->
+              <!-- Enabled for now not actually calculating -> CHANGE LATER!!!!!!!!-->
               <UButton
-                class="bg-[#0077C0] hover:bg-[#005a94] active:scale-95 transition-all duration-150"
-                disabled
+                class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
+                @click ="calculateData"
               >
                 Calculate Percentiles &rarr;
               </UButton>
@@ -194,6 +197,116 @@
         </div>
       </div>
 
+      <!-- CALCULATING (CURRENTLY JUST FAKE LOADING SCREEN) -->
+      <div v-if="currentStep === 2">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center mb-6">
+          <p v-if="!dataCalcFin" class="text-xl font-semibold text-gray-700">Calculating - Please wait</p>
+          <p v-if= "dataCalcFin" class="text-xl font-semibold text-gray-700">Finished Calculating</p>
+        </div>
+
+        <!-- Bottom outline with Back/Forward buttons -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="border-t border-gray-200 px-4 py-3 flex items-center justify-end bg-gray-50 gap-3">
+            <!-- sends user back to first page -->
+            <UButton variant="outline"
+                      color="neutral"
+                      class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
+                      @click="reset">
+              &larr; Back
+            </UButton>
+
+            <!-- progress forward button (when data is ready to present) -->
+            <UButton variant="outline"
+                      class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
+                      :disabled="!dataCalcFin"
+                      @click="displayData">
+              <p v-if="dataCalcFin" class="text-gray-700">View data &rarr;</p>
+              <p v-if="!dataCalcFin" class="text-gray-700">Please Wait</p>
+            </UButton>
+          </div>
+        </div>
+      </div>
+    
+      <!-- SHOW CALCULATED DATA (CURRENTLY JUST LISTS DATA AGAIN NO CALC RN)-->
+      <div v-if="currentStep === 3">
+        <div class="bg-white border border-gray-200 rounded-xl text-center justify-center p-3 mb-3">
+          <p class="text-gray-700 text-3xl">Results</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="overflow-x-auto overflow-y-auto" style="height:62vh">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                  <!-- first column of checkboxes-->
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    <p class="flex text-center">
+                      Select <br /> all
+                      <!-- CHECK BOXES NOT FUNCTIONAL YET -->
+                      <input type="checkbox" checked style="margin-inline:10px" />
+                    </p>
+                  </th>
+
+                  <!-- gets cols-->
+                  <th v-for="col in columns"
+                      :key="col"
+                      class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    {{ col }}
+                  </th>
+                </tr>
+              </thead>
+
+              <!--gets rows -->
+              <tbody class="divide-y divide-gray-100">
+
+                <tr v-for="(row, i) in rows"
+                    :key="i"
+                    class="transition-colors duration-150"
+                    :class="hasWarning(row) ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50'">
+                  <td>
+                    <!-- check boxes for each row (NOT FUNCTIONAL YET) -->
+                    <div style="position:relative; left:35%">
+                      <input type="checkbox" checked style="width: 15px; height: 15px" />
+                    </div>
+                  </td>
+
+                  <td v-for="col in columns"
+                      :key="col"
+                      class="px-4 py-3 whitespace-nowrap">
+                    <span v-if="row[col]" class="text-gray-700">{{ row[col] }}</span>
+                    <span v-else class="text-gray-300 italic text-xs">empty</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!--bottom row-->
+          <div class="bg-white rounded-xl border border-gray-200">
+            <div class="border-t border-gray-200 px-4 py-3 flex bg-gray-50">
+              <div class="">
+                <UButton variant="outline"
+                         color="neutral"
+                         class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
+                         @click="reset">
+                  &larr; Back home
+                </UButton>
+              </div>
+
+              <!-- download buttons for word/excel (NOT FUNCTIONAL) -->
+              <div class="flex items-center gap-20 mx-auto">
+                <UButton class="bg-[#3591d1] hover:bg-[#68addd]">
+                  Download Selected Word Documents
+                </UButton>
+
+                <UButton>
+                  Download Data Excel
+                </UButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -213,6 +326,8 @@ const fileName = ref('')
 const fileSize = ref('')
 const columns = ref<string[]>([])
 const rows = ref<Record<string, string>[]>([])
+//checker to see if data calculation is ready to display (activates continue button from page 3->4)
+const dataCalcFin = ref(false)
 
 //dropdown options
 const formTypes = [
@@ -277,6 +392,22 @@ function hasWarning(row: Record<string, string>) {
   return columns.value.some(col => !row[col])
 }
 
+//calculate data (CURRENTLY USED JUST TO INCREMENT CURRENTSTEP TO GET TO NEW PAGE AND TEST LOADING SCREEN)
+function calculateData() {
+  currentStep.value = 2
+
+  //simulate a 1 sec wait/buffer before data is ready to present
+  setTimeout(() => {
+    dataCalcFin.value = true;
+  }, 1000)
+
+}
+
+//format calculated data for last page (CURRENTLY USED JUST TO INCREMENT CURRENTSTEP TO GET TO LAST PAGE)
+function displayData() {
+  currentStep.value = 3
+}
+
 //runs when rows or columsn change
 const warnings = computed(() => {
   //collect warning strings
@@ -301,5 +432,6 @@ function reset() {
   fileSize.value = ''
   columns.value = []
   rows.value = []
+  dataCalcFin.value = false
 }
 </script>
