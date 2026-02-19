@@ -339,7 +339,7 @@ const formTypes = [
   { label: 'Mandarin Long Form', value: 'mand_lf' },
 ]
 
-//step lablels
+//step labels
 const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
 
 //for dropping file
@@ -372,7 +372,9 @@ function processFile(file: File) {
     //no headers!
     if (lines.length < 2) return
     //get and split column and row info for each
-    columns.value = lines[0].split(',').map(h => h.trim())
+    const headerLine = lines[0]
+    if (!headerLine) return
+    columns.value = headerLine.split(',').map(h => h.trim())
     rows.value = lines.slice(1).map(line => {
       const values = line.split(',')
       //object for keeping track of all rows
@@ -408,13 +410,14 @@ function displayData() {
   currentStep.value = 3
 }
 
-//runs when rows or columsn change
+//runs when rows or columns change
 const warnings = computed(() => {
   //collect warning strings
   const w: string[] = []
   //loop through to determine what's missing
   rows.value.forEach((row, i) => {
-    const id = row[columns.value[0]] || `Row ${i + 1}`
+    const firstCol = columns.value[0]
+    const id = firstCol ? row[firstCol] : `Row ${i + 1}`
     columns.value.forEach(col => {
       if (!row[col]) w.push(`Record ${id}: Missing ${col}`)
     })

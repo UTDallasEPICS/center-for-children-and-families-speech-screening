@@ -3,7 +3,7 @@ import { authClient } from './utils/auth-client'
 
 //Auth Setup
 const sessionResult = authClient.useSession()
-const session = sessionResult?.data ?? ref(null)
+const session = computed(() => sessionResult.value?.data ?? null)
 const route = useRoute()
 
 //DELETE THIS AFTER WE HAVE ACCOUNTS!!!! Dev profile until we make accounts
