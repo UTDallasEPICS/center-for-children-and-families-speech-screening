@@ -67,6 +67,7 @@ async function signOut() {
             <UButton variant="link" color="neutral" size="sm" @click="signOut">Sign Out</UButton>
           </div>
         </div>
+        </div>
       </header>
 
       <!-- PAGE CONTENT -->
