@@ -52,7 +52,6 @@ async function signOut() {
 
           <!-- Need to be valid user and it needs to be on index -->
           <div v-if="displayUser && route.path === '/'" class="flex items-center gap-4">
-
             <div class="flex items-center gap-2">
               <div class="w-8 h-8 rounded-full bg-[#0077C0] flex items-center justify-center">
                 <span class="text-white text-sm font-semibold">{{ displayUser.initials }}</span>
@@ -66,7 +65,6 @@ async function signOut() {
             <!-- handles sign out logic -->
             <UButton variant="link" color="neutral" size="sm" @click="signOut">Sign Out</UButton>
           </div>
-        </div>
         </div>
       </header>
 
