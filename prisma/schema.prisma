@@ -17,6 +17,7 @@ model User {
   name          String
   email         String
   emailVerified Boolean   @default(false)
+  image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   role          UserRole  @default(STUDENT)
