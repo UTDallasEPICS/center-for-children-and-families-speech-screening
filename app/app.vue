@@ -1,59 +1,72 @@
 <script setup lang="ts">
-  const colorMode = useColorMode()
+import { authClient } from './utils/auth-client'
 
-  const isDark = computed({
-    get() {
-      return colorMode.value === 'dark'
-    },
-    set() {
-      colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
-    },
-  })
+//Auth Setup
+const sessionResult = authClient.useSession()
+const session = computed(() => sessionResult.value?.data ?? null)
+const route = useRoute()
+
+//Logic for information to display in user info
+const displayUser = computed(() => {
+  const user = session.value?.user
+  if (user) {
+    return {
+      name: user.name || user.email,
+      initials: user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '?',
+      role: (user as any).role || 'User',
+    }
+  }
+})
+
+//sign out function redirects to login 
+async function signOut() {
+  await authClient.signOut()
+  await navigateTo('/auth')
+}
 </script>
 
 <template>
   <UApp>
-    <div
-      class="flex min-h-screen flex-col bg-white text-gray-900 transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100"
-    >
+    <div class="min-h-screen bg-gray-50 flex flex-col">
       <!-- HEADER -->
-      <header>
-        <div class="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
-          <div class="mx-auto flex h-16 max-w-[90rem] items-center justify-between px-6">
-            <!-- Logo + Title -->
+      <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-[90rem] mx-auto px-6 h-16 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="/ccf-logo.png" alt="Center for Children and Families" class="h-12" />
+            <div class="border-l border-gray-200 pl-2">
+              <p class="text-xs font-semibold text-[#0077C0] leading-tight">MCDI Percentile Calculator</p>
+            </div>
+          </div>
+
+          <!-- Need to be valid user and it needs to be on index -->
+          <div v-if="displayUser && route.path === '/'" class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-              <img src="/ccf-logo.png" alt="Center for Children and Families" class="h-12" />
-              <div class="border-l border-gray-200 pl-2">
-                <p class="text-xs leading-tight font-semibold !text-[#0077C0]">
-                  MCDI Percentile Calculator
-                </p>
+              <div class="w-8 h-8 rounded-full bg-[#0077C0] flex items-center justify-center">
+                <span class="text-white text-sm font-semibold">{{ displayUser.initials }}</span>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium text-gray-700">{{ displayUser.name }}</p>
+                <p class="text-[10px] text-[#8DC63F] font-semibold uppercase tracking-wider">{{ displayUser.role }}</p>
               </div>
             </div>
-
-            <!-- User Info -->
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#0077C0]">
-                  <span class="text-sm font-semibold text-white">JX</span>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm font-medium text-gray-700">Dr. Jingyi Xu</p>
-                  <p class="text-[10px] font-semibold tracking-wider !text-[#8DC63F] uppercase">
-                    Admin
-                  </p>
-                </div>
-              </div>
-
-              <UButton icon="i-heroicons-cog-6-tooth" variant="ghost" color="neutral" />
-              <UButton variant="link" color="neutral" size="sm">Sign Out</UButton>
-            </div>
+            <UButton icon="i-heroicons-cog-6-tooth" variant="ghost" color="neutral" />
+            <!-- handles sign out logic -->
+            <UButton variant="link" color="neutral" size="sm" @click="signOut">Sign Out</UButton>
           </div>
         </div>
       </header>
 
+      <!-- PAGE CONTENT -->
       <main class="flex-1">
         <NuxtPage />
       </main>
+
+      <!-- FOOTER -->
+      <footer class="border-t border-gray-200 bg-white mt-auto">
+        <div class="max-w-[90rem] mx-auto px-6 py-6 flex items-center justify-between">
+          <div class="text-xs text-gray-400">&copy; 2026 Center for Children and Families &middot; University of Texas at Dallas</div>
+        </div>
+      </footer>
     </div>
   </UApp>
 </template>
