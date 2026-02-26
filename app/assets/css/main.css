@@ -1,3 +1,42 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/*default button transitioning*/
+button {
+  transition: all;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+button:active {
+  scale: .95;
+}
+
+
+/*default back buttons*/
+button.back-button {
+  border-width: 1px;
+  border-color: black;
+  background-color: #0f172b;
+  color:white;
+}
+button.back-button:hover {
+  background-color: #878b95;
+}
+
+/*default forward buttons*/
+button.forward-button {
+  border-width: 1px;
+  border-color: gray;
+  background-color: #40e191;
+  color:black;
+}
+button.forward-button:hover {
+  background-color: #33b474;
+}
+
+
+/*text defaults*/
+.footnote-text {
+  color: #99a1af;
+  font-size: 12px;
+}

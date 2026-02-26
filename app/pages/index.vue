@@ -94,7 +94,7 @@
             </UButton>
           </div>
         </div>
-        <div class="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
+        <div class="mt-4 flex items-center justify-center gap-2 footnote-text">
           <UIcon name="i-heroicons-information-circle" />
           <span>Select a form type above before uploading</span>
         </div>
@@ -110,7 +110,7 @@
             <!--file info-->
             <div>
               <p class="text-sm font-semibold text-gray-700">{{ fileName }}</p>
-              <p class="text-xs text-gray-400">{{ fileSize }} &middot; {{ rows.length }} records found &middot; Validated &#x2713;</p>
+              <p class="footnote-text">{{ fileSize }} &middot; {{ rows.length }} records found &middot; Validated &#x2713;</p>
             </div>
           </div>
           <!--show badge based on warning-->
@@ -161,23 +161,21 @@
           </div>
           <div class="border-t border-gray-200 px-4 py-3 flex items-center justify-between bg-gray-50">
             <!-- record count -->
-            <span class="text-xs text-gray-400">
+            <span class="footnote-text">
               Showing {{ Math.min(10, rows.length) }} of {{ rows.length }} records
             </span>
             <!--reset if going back-->
             <div class="flex gap-3">
               <UButton
-                variant="outline"
-                color="neutral"
-                class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
+                class="back-button"
                 @click="reset"
               >
                 &larr; Back
               </UButton>
               <!-- Enabled for now not actually calculating -> CHANGE LATER!!!!!!!!-->
               <UButton
-                class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
-                @click ="calculateData"
+                class="forward-button"
+                @click="calculateData"
               >
                 Calculate Percentiles &rarr;
               </UButton>
@@ -208,18 +206,15 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div class="border-t border-gray-200 px-4 py-3 flex items-center justify-end bg-gray-50 gap-3">
             <!-- sends user back to first page -->
-            <UButton variant="outline"
-                      color="neutral"
-                      class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
-                      @click="reset">
+            <UButton class="back-button"
+                     @click="reset">
               &larr; Back
             </UButton>
 
             <!-- progress forward button (when data is ready to present) -->
-            <UButton variant="outline"
-                      class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
-                      :disabled="!dataCalcFin"
-                      @click="displayData">
+            <UButton class="forward-button"
+                     :disabled="!dataCalcFin"
+                     @click="displayData">
               <p v-if="dataCalcFin" class="text-gray-700">View data &rarr;</p>
               <p v-if="!dataCalcFin" class="text-gray-700">Please Wait</p>
             </UButton>
@@ -284,14 +279,10 @@
           <!--bottom row-->
           <div class="bg-white rounded-xl border border-gray-200">
             <div class="border-t border-gray-200 px-4 py-3 flex bg-gray-50">
-              <div class="">
-                <UButton variant="outline"
-                         color="neutral"
-                         class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
-                         @click="reset">
-                  &larr; Back home
-                </UButton>
-              </div>
+              <UButton class="back-button"
+                        @click="reset">
+                &larr; Back home
+              </UButton>
 
               <!-- download buttons for word/excel (NOT FUNCTIONAL) -->
               <div class="flex items-center gap-20 mx-auto">
@@ -312,6 +303,7 @@
 </template>
 
 <script setup lang="ts">
+import './assets/css/main.css'
 
 //MCDI form
 const selectedForm = ref('')

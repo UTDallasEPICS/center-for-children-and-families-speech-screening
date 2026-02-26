@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { authClient } from './utils/auth-client'
+import './assets/css/main.css'
 
 //Auth Setup
 const sessionResult = authClient.useSession()
@@ -64,7 +65,7 @@ async function signOut() {
       <!-- FOOTER -->
       <footer class="border-t border-gray-200 bg-white mt-auto">
         <div class="max-w-[90rem] mx-auto px-6 py-6 flex items-center justify-between">
-          <div class="text-xs text-gray-400">&copy; 2026 Center for Children and Families &middot; University of Texas at Dallas</div>
+          <div class="footnote-text">&copy; 2026 Center for Children and Families &middot; University of Texas at Dallas</div>
         </div>
       </footer>
     </div>
