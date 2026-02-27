@@ -23,7 +23,7 @@
           <span>Home</span>
         </NuxtLink>
 
-        <NuxtLink to="/users" class="nav-button">
+        <NuxtLink to="/dashboard" class="nav-button">
           <span class="icon">
             <svg
               xmlns="http://www.w3.org/2000/svg"
