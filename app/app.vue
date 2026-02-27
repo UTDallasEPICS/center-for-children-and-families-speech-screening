@@ -1,40 +1,23 @@
 <script setup lang="ts">
   import { authClient } from './utils/auth-client'
 
-  //Auth Setup
-  const sessionResult = authClient.useSession()
-  const session = sessionResult?.data ?? ref(null)
-  const route = useRoute()
 
-  //DELETE THIS AFTER WE HAVE ACCOUNTS!!!! Dev profile until we make accounts
-  const isDev = process.dev
-  const devUser = {
-    name: 'Dev User',
-    email: 'dev@utdallas.edu',
-    initials: 'DU',
-    role: 'Admin',
-  }
+//Auth Setup
+const sessionResult = authClient.useSession()
+const session = computed(() => sessionResult.value?.data ?? null)
+const route = useRoute()
 
-  //Logic for information to display in user info
-  const displayUser = computed(() => {
-    const user = session.value?.user
-    if (user) {
-      return {
-        name: user.name || user.email,
-        initials:
-          user.name
-            ?.split(' ')
-            .map((n: string) => n[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase() || '?',
-        role: (user as any).role || 'User',
-      }
+//Logic for information to display in user info
+const displayUser = computed(() => {
+  const user = session.value?.user
+  if (user) {
+    return {
+      name: user.name || user.email,
+      initials: user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '?',
+      role: (user as any).role || 'User',
     }
-    //DELETE AFTER!!!!!
-    if (isDev) return devUser
-    return null
-  })
+  }
+})
 
   //sign out function redirects to login
   async function signOut() {
@@ -89,12 +72,9 @@
       </main>
 
       <!-- FOOTER -->
-      <footer class="mt-auto border-t border-gray-200 bg-white">
-        <div class="mx-auto flex w-full items-center justify-between px-6 py-6">
-          <div class="text-xs text-gray-400">
-            &copy; 2026 Center for Children and Families &middot; University of Texas at Dallas
-          </div>
-          <div class="text-xs text-gray-300">The Samuel Mogs</div>
+      <footer class="border-t border-gray-200 bg-white mt-auto">
+        <div class="max-w-[90rem] mx-auto px-6 py-6 flex items-center justify-between">
+          <div class="text-xs text-gray-400">&copy; 2026 Center for Children and Families &middot; University of Texas at Dallas</div>
         </div>
       </footer>
     </div>

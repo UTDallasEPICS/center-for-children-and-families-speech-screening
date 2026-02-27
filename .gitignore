@@ -26,3 +26,6 @@ logs
 /prisma/generated
 /prisma/migrations
 /dev.db
+
+.claude/
+prisma/dev.db
