@@ -1,23 +1,28 @@
 <script setup lang="ts">
   import { authClient } from './utils/auth-client'
 
+  //Auth Setup
+  const sessionResult = authClient.useSession()
+  const session = computed(() => sessionResult.value?.data ?? null)
+  const route = useRoute()
 
-//Auth Setup
-const sessionResult = authClient.useSession()
-const session = computed(() => sessionResult.value?.data ?? null)
-const route = useRoute()
-
-//Logic for information to display in user info
-const displayUser = computed(() => {
-  const user = session.value?.user
-  if (user) {
-    return {
-      name: user.name || user.email,
-      initials: user.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '?',
-      role: (user as any).role || 'User',
+  //Logic for information to display in user info
+  const displayUser = computed(() => {
+    const user = session.value?.user
+    if (user) {
+      return {
+        name: user.name || user.email,
+        initials:
+          user.name
+            ?.split(' ')
+            .map((n: string) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || '?',
+        role: (user as any).role || 'User',
+      }
     }
-  }
-})
+  })
 
   //sign out function redirects to login
   async function signOut() {
@@ -72,9 +77,11 @@ const displayUser = computed(() => {
       </main>
 
       <!-- FOOTER -->
-      <footer class="border-t border-gray-200 bg-white mt-auto">
-        <div class="max-w-[90rem] mx-auto px-6 py-6 flex items-center justify-between">
-          <div class="text-xs text-gray-400">&copy; 2026 Center for Children and Families &middot; University of Texas at Dallas</div>
+      <footer class="mt-auto border-t border-gray-200 bg-white">
+        <div class="mx-auto flex max-w-[90rem] items-center justify-between px-6 py-6">
+          <div class="text-xs text-gray-400">
+            &copy; 2026 Center for Children and Families &middot; University of Texas at Dallas
+          </div>
         </div>
       </footer>
     </div>

@@ -47,6 +47,7 @@
       <!-- Page Header -->
       <header class="page-header">
         <h1>Manage Users</h1>
+        <p>{{ new Date(now).toLocaleTimeString() }}</p>
       </header>
 
       <section class="content">
@@ -88,7 +89,7 @@
 <style src="../assets/css/main.css"></style>
 
 <script setup>
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref } from 'vue'
   import { date } from 'zod'
   const users = ref(null)
 
@@ -109,22 +110,10 @@
     },
   ]
 
-  const now = ref(Date.now())
-  let interval
-
-  onMounted(() => {
-    interval = setInterval(
-      () => {
-        now.value = Date.now()
-      },
-      1000 * 60 * 60
-    )
-  })
-
-  onUnmounted(() => clearInterval(interval))
+  //Checks how many days are left until the user expires.
   const checkTimeLeft = (user) => {
     const expiresDate = new Date(user.expiresAt)
-    const timeLeft = expiresDate.getTime() - now.value
+    const timeLeft = expiresDate.getTime() - Date.now()
     const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
     return Math.floor(daysTimeLeft)
   }
