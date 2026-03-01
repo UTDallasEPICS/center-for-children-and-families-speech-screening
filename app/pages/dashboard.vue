@@ -46,12 +46,15 @@
     <div class="users-page">
       <!-- Page Header -->
       <header class="page-header">
-        <h1>Manage Users</h1>
-        <p>{{ new Date(now).toLocaleTimeString() }}</p>
+        <h1>Manage Users</h1> 
+
+        
+        <button @click ="insertUser" class="btn-primary">Add Users</button>
+        <!--<p>{{ new Date(now).toLocaleTimeString() }}</p>-->
       </header>
 
       <section class="content">
-        <!-- Add User Button -->
+        
 
         <!-- Users List Card -->
         <div class="userlist">
@@ -84,6 +87,22 @@
       </section>
     </div>
   </div>
+
+  <!--Modal setup-->
+  <div v-if="showModal" class = "modal-overlay">
+    <div class = "modal">
+      <h1>Enter the NetId of users you want to give access to</h1>
+
+      <input type="text" placeholder="Type NetID here" class="modal-input"/>
+
+      <div class="modal-actions">
+        <button @click = closeModal class="btn-danger"> Cancel</button>
+          <button class=" btn-primary"> Submit</button> 
+
+      </div>
+
+    </div>
+  </div>
 </template>
 
 <style src="../assets/css/main.css"></style>
@@ -91,8 +110,9 @@
 <script setup>
   import { ref } from 'vue'
   import { date } from 'zod'
-  const users = ref(null)
 
+  const users = ref(null)
+  const showModal = ref(false)
   const test = [
     {
       name: 'Samuel Ma',
@@ -117,4 +137,14 @@
     const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
     return Math.floor(daysTimeLeft)
   }
+
+  const insertUser = () => {
+    showModal.value = true
+  }
+
+  const closeModal = () => {
+    showModal.value = false
+  }
+
 </script>
+
