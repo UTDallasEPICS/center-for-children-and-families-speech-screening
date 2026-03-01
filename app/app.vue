@@ -47,7 +47,10 @@
           </div>
 
           <!-- Need to be valid user and it needs to be on index -->
-          <div v-if="displayUser && route.path === '/'" class="flex items-center gap-4">
+          <div
+            v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
+            class="flex items-center gap-4"
+          >
             <div class="flex items-center gap-2">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#0077C0]">
                 <span class="text-sm font-semibold text-white">{{ displayUser.initials }}</span>
