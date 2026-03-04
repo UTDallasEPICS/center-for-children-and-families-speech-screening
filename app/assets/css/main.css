@@ -1,6 +1,74 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+@theme {
+  --color-main-green: #40e191;
+  --color-main-blue: #0077C0;
+  --color-light-gray: #eeeeee;
+}
+
+
+/*default frames*/
+.flex-center-center {
+  display:flex;
+  flex-direction:row;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-center-JusBetween {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.white-background-border {
+  background-color: white;
+  border: solid;
+  border-width: thin;
+  border-radius: 12px;
+  border-color: var(--color-light-gray);
+}
+
+.header-border {
+  background-color: white;
+  border-bottom: solid;
+  border-width: thin;
+  border-color: var(--color-light-gray);
+}
+
+.bottom-header {
+  background-color: white;
+  border-top: solid;
+  border-width: thin;
+  border-color: var(--color-light-gray);
+  padding: 1rem;
+}
+
+.table-header {
+  background-color: #F9FAFB;
+  border-bottom: solid;
+  border-width: thin;
+  overflow: hidden;
+}
+
+.upload-box {
+  background-color: white;
+  border-radius: 1rem;
+  border-width: 2px;
+  padding: 4rem;
+  text-align: center;
+  cursor: pointer;
+
+}
+
+.transition-ease {
+  transition: all;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
 /*default button transitioning*/
 button {
   transition: all;
@@ -27,8 +95,8 @@ button.back-button:hover {
 button.forward-button {
   border-width: 1px;
   border-color: gray;
-  background-color: #40e191;
-  color:black;
+  background-color: var(--color-main-green);
+  color: black;
 }
 button.forward-button:hover {
   background-color: #33b474;
@@ -39,4 +107,16 @@ button.forward-button:hover {
 .footnote-text {
   color: #99a1af;
   font-size: 12px;
+}
+
+.table-header-text {
+  font-weight: 600;
+  font-size: 12px;
+  color: #718096;
+  text-transform: uppercase;
+  text-align: left;
+  padding-inline: 1rem;
+  padding-block: 12px;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
 }
