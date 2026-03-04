@@ -1,10 +1,15 @@
 <script setup lang="ts">
   import { authClient } from './utils/auth-client'
+  import { computed, watch } from 'vue'
 
   //Auth Setup
   const sessionResult = authClient.useSession()
   const session = computed(() => sessionResult.value?.data ?? null)
   const route = useRoute()
+
+  watch(session, (newSession) => {
+    if (!newSession && route.path !== '/auth') navigateTo('/auth')
+  })
 
   //Logic for information to display in user info
   const displayUser = computed(() => {
@@ -47,13 +52,16 @@
           </div>
 
           <!-- Need to be valid user and it needs to be on index -->
-          <div v-if="displayUser && route.path === '/'" class="flex items-center gap-4">
+          <div
+            v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
+            class="flex items-center gap-4"
+          >
             <div class="flex items-center gap-2">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#0077C0]">
                 <span class="text-sm font-semibold text-white">{{ displayUser.initials }}</span>
               </div>
               <div class="text-right">
-                <p class="text-sm font-medium text-gray-700">{{ displayUser.name }}</p>
+                <p class="font-mediumg text-sm text-gray-700">{{ displayUser.name }}</p>
                 <p class="text-[10px] font-semibold tracking-wider text-[#8DC63F] uppercase">
                   {{ displayUser.role }}
                 </p>
