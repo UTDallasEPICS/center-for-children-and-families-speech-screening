@@ -16,9 +16,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. Fetch all users
-  const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, createdAt: true }
-  });
+  const users = await prisma.user.findMany();
   
   return users;
 });
