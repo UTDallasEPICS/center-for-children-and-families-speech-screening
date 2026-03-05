@@ -3,14 +3,14 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma"
 import { emailOTP } from "better-auth/plugins/email-otp"
 import nodemailer from "nodemailer"
-import { UserRole } from "~~/prisma/generated/client";
+import { UserRole } from "@prisma/client";
 
 const transporter = nodemailer.createTransport({
-	service: "gmail",
-	auth: {
-		user: process.env.EMAIL_USER,
-		pass: process.env.EMAIL_PASS,
-	}
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 })
 
 export const auth = betterAuth({
