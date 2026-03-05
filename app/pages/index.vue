@@ -72,7 +72,7 @@
           @click="fileInput?.click()"
         >
           <!-- handle selected file with custom handle and hide default -->
-          <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleFileSelect" />
+          <input ref="fileInput" type="file" accept=".csv,.xlsx" class="hidden" @change="handleFileSelect" />
           <div class="flex flex-col items-center gap-4">
             <!-- drag over styling for the rounded square in the middle -->
             <div
@@ -82,8 +82,8 @@
               <UIcon name="i-heroicons-arrow-up-tray" class="text-[#0077C0] text-3xl" />
             </div>
             <div>
-              <p class="text-lg font-semibold text-gray-700">Drag & drop your CSV file here</p>
-              <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv files only</p>
+              <p class="text-lg font-semibold text-gray-700">Drag & drop your file here</p>
+              <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv and .xlsx files</p>
             </div>
             <!--Open file. need .stop to make sure it only opens once due to our custom file input handler-->
             <UButton
@@ -96,7 +96,7 @@
         </div>
         <div class="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
           <UIcon name="i-heroicons-information-circle" />
-          <span>Select a form type above before uploading</span>
+          <span>Select a form type above before uploading &mdash; .csv and .xlsx files accepted</span>
         </div>
       </div>
 
@@ -174,7 +174,7 @@
               >
                 &larr; Back
               </UButton>
-              <!-- Enabled for now not actually calculating -> CHANGE LATER!!!!!!!!-->
+              <!-- calls calculate endpoint -->
               <UButton
                 class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
                 @click ="calculateData"
@@ -197,7 +197,7 @@
         </div>
       </div>
 
-      <!-- CALCULATING (CURRENTLY JUST FAKE LOADING SCREEN) -->
+      <!-- CALCULATING — calls /api/mcdi/calculate and waits for response -->
       <div v-if="currentStep === 2">
         <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center mb-6">
           <p v-if="!dataCalcFin" class="text-xl font-semibold text-gray-700">Calculating - Please wait</p>
@@ -227,7 +227,7 @@
         </div>
       </div>
     
-      <!-- SHOW CALCULATED DATA (CURRENTLY JUST LISTS DATA AGAIN NO CALC RN)-->
+      <!-- SHOW CALCULATED DATA — displays results with working checkboxes and download buttons -->
       <div v-if="currentStep === 3">
         <div class="bg-white border border-gray-200 rounded-xl text-center justify-center p-3 mb-3">
           <p class="text-gray-700 text-3xl">Results</p>
@@ -238,12 +238,14 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-gray-50 border-b border-gray-200">
-                  <!-- first column of checkboxes-->
+                  <!-- select all checkbox — toggles all rows -->
                   <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     <p class="flex text-center">
                       Select <br /> all
-                      <!-- CHECK BOXES NOT FUNCTIONAL YET -->
-                      <input type="checkbox" checked style="margin-inline:10px" />
+                      <input type="checkbox"
+                             :checked="selectedRows.size === rows.length"
+                             style="margin-inline:10px"
+                             @change="selectedRows = selectedRows.size === rows.length ? new Set() : new Set(rows.map((_, i) => i))" />
                     </p>
                   </th>
 
@@ -264,9 +266,12 @@
                     class="transition-colors duration-150"
                     :class="hasWarning(row) ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50'">
                   <td>
-                    <!-- check boxes for each row (NOT FUNCTIONAL YET) -->
+                    <!-- per-row checkbox — toggles individual selection -->
                     <div style="position:relative; left:35%">
-                      <input type="checkbox" checked style="width: 15px; height: 15px" />
+                      <input type="checkbox"
+                             :checked="selectedRows.has(i)"
+                             style="width: 15px; height: 15px"
+                             @change="selectedRows.has(i) ? selectedRows.delete(i) : selectedRows.add(i)" />
                     </div>
                   </td>
 
@@ -293,13 +298,13 @@
                 </UButton>
               </div>
 
-              <!-- download buttons for word/excel (NOT FUNCTIONAL) -->
+              <!-- download buttons — call generate endpoints -->
               <div class="flex items-center gap-20 mx-auto">
-                <UButton class="bg-[#3591d1] hover:bg-[#68addd]">
+                <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="generateReports">
                   Download Selected Word Documents
                 </UButton>
 
-                <UButton>
+                <UButton @click="generateExcel">
                   Download Data Excel
                 </UButton>
               </div>
@@ -328,15 +333,20 @@ const columns = ref<string[]>([])
 const rows = ref<Record<string, string>[]>([])
 //checker to see if data calculation is ready to display (activates continue button from page 3->4)
 const dataCalcFin = ref(false)
-
+//stores processed data returned from the calculate endpoint
+const outputRows = ref<any[]>([])
+//tracks which rows are selected via checkboxes for word doc download
+const selectedRows = ref<Set<number>>(new Set())
 //dropdown options
 const formTypes = [
-  { label: 'SE Short Form 16-30 mo (Spanish-English)', value: 'sesf_16_30' },
-  { label: 'SE Short Form 8-18 mo (Spanish-English)', value: 'sesf_8_18' },
-  { label: 'English Short Form 8-18 mo', value: 'eng_sf_8_18' },
-  { label: 'English Short Form 16-30 mo', value: 'eng_sf_16_30' },
-  { label: 'English Long Form (Full MCDI)', value: 'eng_lf' },
-  { label: 'Mandarin Long Form', value: 'mand_lf' },
+  { label: 'English Short Form 8-18 mo', value: 'engSF_8_18' },
+  { label: 'English Short Form 16-30 mo', value: 'engSF_16_30' },
+  { label: 'SE Short Form 8-18 mo (Spanish-English)', value: 'SE_8_18' },
+  { label: 'SE Short Form 16-30 mo (Spanish-English)', value: 'SE_16_30' },
+  { label: 'ME 8-18 mo (Mandarin-English)', value: 'ME_8_18' },
+  { label: 'ME 16-30 mo (Mandarin-English)', value: 'ME_16_30' },
+  { label: 'English + Other Language 8-18 mo', value: 'engOther_8_18' },
+  { label: 'English + Other Language 16-30 mo', value: 'engOther_16_30' },
 ]
 
 //step labels
@@ -347,7 +357,7 @@ function handleDrop(e: DragEvent) {
   dragOver.value = false
   const file = e.dataTransfer?.files[0]
   //error handling needed for different files
-  if (file && file.name.endsWith('.csv')) processFile(file)
+  if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) processFile(file)
 }
 
 //for clicking file
@@ -356,37 +366,76 @@ function handleFileSelect(e: Event) {
   if (file) processFile(file)
 }
 
-//Processes file
+//Processes file — converts xlsx to csv if needed, then parses for preview
 function processFile(file: File) {
   fileName.value = file.name
   //maybe add error handling for filesize? Accidentally putting large files breaks application
   fileSize.value = file.size < 1024 ? file.size + ' B' : (file.size / 1024).toFixed(1) + ' KB'
 
-  //file reader logic
   const reader = new FileReader()
-  //listener for when we've read the data
-  reader.onload = (e) => {
-    //grab info and trim
-    const text = e.target?.result as string
-    const lines = text.trim().split('\n')
-    //no headers!
-    if (lines.length < 2) return
-    //get and split column and row info for each
-    const headerLine = lines[0]
-    if (!headerLine) return
-    columns.value = headerLine.split(',').map(h => h.trim())
-    rows.value = lines.slice(1).map(line => {
-      const values = line.split(',')
-      //object for keeping track of all rows
-      const row: Record<string, string> = {}
-      columns.value.forEach((h, i) => { row[h] = values[i]?.trim() || '' })
-      return row
-    }).filter(row => Object.values(row).some(v => v !== '')) //filter out rows with absolutely nothing
 
-    //update wizard (delete if not keeping)
-    currentStep.value = 1
+  if (file.name.endsWith('.xlsx')) {
+    //read xlsx as binary, convert to csv using SheetJS, then run through normal csv parsing
+    reader.onload = async (e) => {
+      const { read, utils } = await import('xlsx')
+      const data = new Uint8Array(e.target?.result as ArrayBuffer)
+      const workbook = read(data, { type: 'array' })
+      //map form type to the correct sheet name in the input Excel template
+      const sheetMap: Record<string, string> = {
+        engSF_8_18:    'engSF8-18',
+        engSF_16_30:   'engSF16-30',
+        SE_8_18:       'SE8-18',
+        SE_16_30:      'SE16-30',
+        ME_8_18:       'ME8-18',
+        ME_16_30:      'ME16-30',
+        engOther_8_18: 'engOther8-18',
+        engOther_16_30:'engOther16-30',
+      }
+      //grab the sheet matching the selected form type, fall back to first sheet if not found
+      const sheetName = sheetMap[selectedForm.value] ?? workbook.SheetNames[0]
+      const sheet = workbook.Sheets[sheetName as string]
+      if (!sheet) {
+        console.error(`Sheet "${sheetName}" not found in workbook`)
+        return
+      }
+      //convert to csv string — SheetJS handles date formatting etc
+      const csv = utils.sheet_to_csv(sheet as NonNullable<typeof sheet>)
+      parseCSVText(csv, true)
+    }
+    reader.readAsArrayBuffer(file)
+  } else {
+    //file reader logic for csv
+    reader.onload = (e) => {
+      const text = e.target?.result as string
+      parseCSVText(text, false)
+    }
+    reader.readAsText(file)
   }
-  reader.readAsText(file)
+}
+
+//shared csv parsing logic used for both native csv and xlsx-converted-to-csv
+//skipSecondRow: true for xlsx input templates which have a label row after headers
+function parseCSVText(text: string, skipSecondRow: boolean) {
+  //grab info and trim
+  const lines = text.trim().split('\n')
+  //no headers!
+  if (lines.length < 2) return
+  //get and split column and row info for each
+  const headerLine = lines[0]
+  if (!headerLine) return
+  columns.value = headerLine.split(',').map(h => h.trim())
+  //skip row 2 if xlsx (the "for percentile calculation" label row in the Excel input template)
+  const dataLines = skipSecondRow ? lines.slice(2) : lines.slice(1)
+  rows.value = dataLines.map(line => {
+    const values = line.split(',')
+    //object for keeping track of all rows
+    const row: Record<string, string> = {}
+    columns.value.forEach((h, i) => { row[h] = values[i]?.trim() || '' })
+    return row
+  }).filter(row => Object.values(row).some(v => v !== '')) //filter out rows with absolutely nothing
+
+  //update wizard
+  currentStep.value = 1
 }
 
 //decide if row should be warned about in displayed dataset 
@@ -394,20 +443,85 @@ function hasWarning(row: Record<string, string>) {
   return columns.value.some(col => !row[col])
 }
 
-//calculate data (CURRENTLY USED JUST TO INCREMENT CURRENTSTEP TO GET TO NEW PAGE AND TEST LOADING SCREEN)
-function calculateData() {
+//calls the calculate endpoint, stores processed data in outputRows
+async function calculateData() {
   currentStep.value = 2
 
-  //simulate a 1 sec wait/buffer before data is ready to present
-  setTimeout(() => {
-    dataCalcFin.value = true;
-  }, 1000)
+  try {
+    const response = await $fetch('/api/mcdi/calculate', {
+      method: 'POST',
+      body: {
+        formType: selectedForm.value,
+        rows: rows.value,
+        columns: columns.value,
+      },
+    }) as any //get rid of once we establish proper types
+    outputRows.value = response.outputRows || []
+    //select all rows by default so all checkboxes start checked
+    selectedRows.value = new Set(outputRows.value.map((_: any, i: number) => i))
+  } catch (err) {
+    console.error('Calculate failed:', err)
+  }
 
+  dataCalcFin.value = true
 }
 
-//format calculated data for last page (CURRENTLY USED JUST TO INCREMENT CURRENTSTEP TO GET TO LAST PAGE)
+//format calculated data for last page
 function displayData() {
   currentStep.value = 3
+}
+
+//sends selected rows to backend to generate .docx reports as a zip
+async function generateReports() {
+  try {
+    const response = await $fetch('/api/mcdi/generate-reports', {
+      method: 'POST',
+      body: {
+        formType: selectedForm.value,
+        selectedIndices: [...selectedRows.value],
+        outputRows: outputRows.value,
+      },
+    }) as any
+    //convert base64 back to a blob and trigger browser download
+    const bytes = atob(response.base64)
+    const byteArray = new Uint8Array(bytes.length)
+    for (let i = 0; i < bytes.length; i++) byteArray[i] = bytes.charCodeAt(i)
+    const blob = new Blob([byteArray], { type: 'application/zip' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = response.fileName
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Generate reports failed:', err)
+  }
+}
+
+//sends processed data to backend to generate a .xlsx file
+async function generateExcel() {
+  try {
+    const response = await $fetch('/api/mcdi/generate-excel', {
+      method: 'POST',
+      body: {
+        formType: selectedForm.value,
+        outputRows: outputRows.value,
+      },
+    }) as any
+    //convert base64 back to a blob and trigger browser download
+    const bytes = atob(response.base64)
+    const byteArray = new Uint8Array(bytes.length)
+    for (let i = 0; i < bytes.length; i++) byteArray[i] = bytes.charCodeAt(i)
+    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = response.fileName
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Generate excel failed:', err)
+  }
 }
 
 //runs when rows or columns change
@@ -436,5 +550,7 @@ function reset() {
   columns.value = []
   rows.value = []
   dataCalcFin.value = false
+  outputRows.value = []
+  selectedRows.value = new Set()
 }
 </script>
