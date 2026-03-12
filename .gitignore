@@ -29,3 +29,5 @@ logs
 
 .claude/
 prisma/dev.db
+
+.vs/
