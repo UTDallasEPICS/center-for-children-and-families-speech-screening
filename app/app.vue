@@ -35,19 +35,19 @@ async function signOut() {
           <div class="flex items-center gap-2">
             <img src="/ccf-logo.png" alt="Center for Children and Families" class="h-12" />
             <div class="border-l border-gray-200 pl-2">
-              <p class="text-xs font-semibold text-(--color-main-blue) leading-tight">MCDI Percentile Calculator</p>
+              <p class="text-xs font-semibold text-main-blue leading-tight">MCDI Percentile Calculator</p>
             </div>
           </div>
 
           <!-- Need to be valid user and it needs to be on index -->
           <div v-if="displayUser && route.path === '/'" class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-(--color-main-blue) flex-center-center">
+              <div class="w-8 h-8 rounded-full bg-main-blue flex-center-center">
                 <span class="text-white text-sm font-semibold">{{ displayUser.initials }}</span>
               </div>
               <div class="text-right">
                 <p class="text-sm font-medium text-gray-700">{{ displayUser.name }}</p>
-                <p class="text-[10px] text-(--color-confirmation-green) font-semibold uppercase tracking-wider">{{ displayUser.role }}</p>
+                <p class="text-[10px] text-confirmation-green font-semibold uppercase tracking-wider">{{ displayUser.role }}</p>
               </div>
             </div>
             <UButton icon="i-heroicons-cog-6-tooth" variant="ghost" color="neutral" />

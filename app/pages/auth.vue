@@ -91,7 +91,7 @@
             <div class="flex-center-center">
               <UButton
                 type="submit"
-                class="flex-center-center w-32 bg-(--color-main-blue) text-white hover:bg-(--color-main-blue)/80"
+                class="flex-center-center w-32 bg-main-blue text-white hover:bg-main-blue/80"
               >
                 {{ isEmailSent ? 'Login' : 'Send OTP' }}
               </UButton>

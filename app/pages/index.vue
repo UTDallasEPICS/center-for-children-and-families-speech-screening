@@ -7,9 +7,9 @@
       <div
         class="flex-center-center transition-ease gap-2 px-4 py-2 rounded-full"
         :class="currentStep === i
-          ? 'bg-(--color-main-blue) text-white'
+          ? 'bg-main-blue text-white'
           : currentStep > i
-            ? 'bg-(--color-confirmation-green)/10 text-(--color-confirmation-green)'
+            ? 'bg-confirmation-green/10 text-confirmation-green'
             : 'bg-gray-100 text-gray-400'"
       >
         <div
@@ -17,7 +17,7 @@
           :class="currentStep === i
             ? 'bg-white/20'
             : currentStep > i
-              ? 'bg-(--color-confirmation-green)/20'
+              ? 'bg-confirmation-green/20'
               : 'bg-gray-200'"
         >
         <!-- check or num -->
@@ -30,7 +30,7 @@
       <div
         v-if="i < steps.length - 1"
         class="w-12 h-0.5 transition-colors duration-200"
-        :class="currentStep > i ? 'bg-(--color-confirmation-green)' : 'bg-gray-200'"
+        :class="currentStep > i ? 'bg-confirmation-green' : 'bg-gray-200'"
       />
     </template>
   </div>
@@ -59,8 +59,8 @@
       <div
         class="upload-box transition-ease border-dashed"
         :class="dragOver
-          ? 'border-(--color-main-blue) bg-(--color-main-blue)/[0.02] scale-[1.005]'
-          : 'border-gray-300 hover:border-(--color-main-blue) hover:shadow-md'"
+          ? 'border-main-blue bg-main-blue/[0.02] scale-[1.005]'
+          : 'border-gray-300 hover:border-main-blue hover:shadow-md'"
         @dragover.prevent="dragOver = true"
         @dragleave="dragOver = false"
         @drop.prevent="handleDrop"
@@ -72,9 +72,9 @@
           <!-- drag over styling for the rounded square in the middle -->
           <div
             class="w-16 h-16 rounded-2xl flex-center-center transition-ease"
-            :class="dragOver ? 'bg-(--color-main-blue)/10 scale-110' : 'bg-(--color-main-blue)/5'"
+            :class="dragOver ? 'bg-main-blue/10 scale-110' : 'bg-main-blue/5'"
           >
-            <UIcon name="i-heroicons-arrow-up-tray" class="text-(--color-main-blue) text-3xl" />
+            <UIcon name="i-heroicons-arrow-up-tray" class="text-main-blue text-3xl" />
           </div>
           <div>
             <p class="text-lg font-semibold text-gray-700">Drag & drop your CSV file here</p>
@@ -82,7 +82,7 @@
           </div>
           <!--Open file. need .stop to make sure it only opens once due to our custom file input handler-->
           <UButton
-            class="mt-2 bg-(--color-main-blue) hover:bg-(--color-off-main-blue) active:scale-95"
+            class="mt-2 bg-main-blue hover:bg-off-main-blue active:scale-95"
             @click.stop="fileInput?.click()"
           >
             Browse Files
@@ -100,7 +100,7 @@
       <div class="white-background-border flex-center-JusBetween p-4 mb-6">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-green-50 flex-center-center">
-            <UIcon name="i-heroicons-check-circle" class="text-(--color-confirmation-green) text-xl" />
+            <UIcon name="i-heroicons-check-circle" class="text-confirmation-green text-xl" />
           </div>
           <!--file info-->
           <div>
@@ -280,7 +280,7 @@
 
           <!-- download buttons for word/excel (NOT FUNCTIONAL) -->
           <div class="flex-center-center gap-2">
-            <UButton class="bg-(--color-main-blue) hover:bg-(--color-main-blue)/80">
+            <UButton class="bg-main-blue hover:bg-main-blue/80">
               Download Selected Word Documents
             </UButton>
 
