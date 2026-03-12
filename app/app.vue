@@ -2,6 +2,7 @@
   import { authClient } from './utils/auth-client'
   import { computed, watch } from 'vue'
 
+
   //Auth Setup
   const sessionResult = authClient.useSession()
   const session = computed(() => sessionResult.value?.data ?? null)
@@ -45,7 +46,7 @@
           <div class="flex items-center gap-2">
             <img src="/ccf-logo.png" alt="Center for Children and Families" class="h-12" />
             <div class="border-l border-gray-200 pl-2">
-              <p class="text-xs leading-tight font-semibold text-[#0077C0]">
+              <p class="text-xs leading-tight font-semibold text-main-blue">
                 MCDI Percentile Calculator
               </p>
             </div>
@@ -57,12 +58,13 @@
             class="flex items-center gap-4"
           >
             <div class="flex items-center gap-2">
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#0077C0]">
+
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-main-blue">
                 <span class="text-sm font-semibold text-white">{{ displayUser.initials }}</span>
               </div>
               <div class="text-right">
                 <p class="font-mediumg text-sm text-gray-700">{{ displayUser.name }}</p>
-                <p class="text-[10px] font-semibold tracking-wider text-[#8DC63F] uppercase">
+                <p class="text-[10px] font-semibold tracking-wider text-confirmation-green uppercase">
                   {{ displayUser.role }}
                 </p>
               </div>
@@ -86,10 +88,11 @@
 
       <!-- FOOTER -->
       <footer class="mt-auto border-t border-gray-200 bg-white">
-        <div class="mx-auto flex max-w-[90rem] items-center justify-between px-6 py-6">
-          <div class="text-xs text-gray-400">
+        <div class="mx-auto max-w-[90rem] flex-center-JusBetween px-6 py-6">
+          <div class="footnote-text">
             &copy; 2026 Center for Children and Families &middot; University of Texas at Dallas
           </div>
+
         </div>
       </footer>
     </div>

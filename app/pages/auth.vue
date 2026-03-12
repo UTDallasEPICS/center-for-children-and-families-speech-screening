@@ -2,6 +2,7 @@
   import { z } from 'zod'
   import type { FormSubmitEvent } from '@nuxt/ui'
   import { authClient } from '../utils/auth-client'
+  import './assets/css/main.css'
 
   const toast = useToast()
   const isEmailSent = ref(false)
@@ -56,7 +57,7 @@
   <UApp>
     <div class="flex min-h-screen flex-col bg-gray-50">
       <!-- LOGIN CARD -->
-      <main class="flex flex-1 items-center justify-center py-12">
+      <main class="flex-center-center flex-1 py-12">
         <div class="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-md">
           <h2 class="mb-6 text-center text-2xl font-bold text-gray-900">Login</h2>
 
@@ -81,16 +82,16 @@
                 v-model="state.otp"
                 :length="6"
                 size="xl"
-                class="flex w-full items-center justify-center"
+                class="w-full flex-center-center"
                 :ui="{ base: 'bg-white text-black' }"
               />
             </div>
 
             <!-- BUTTON -->
-            <div class="flex justify-center">
+            <div class="flex-center-center">
               <UButton
                 type="submit"
-                class="flex w-32 justify-center bg-[#0077C0] text-white hover:bg-[#0065A6]"
+                class="flex-center-center w-32 bg-main-blue text-white hover:bg-main-blue/80"
               >
                 {{ isEmailSent ? 'Login' : 'Send OTP' }}
               </UButton>
