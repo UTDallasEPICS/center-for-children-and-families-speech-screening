@@ -4,7 +4,11 @@
 @theme {
   --color-main-green: #40e191;
   --color-main-blue: #0077C0;
+  --color-off-main-blue: #005a94;
+  --color-off-white: #F9FAFB;
   --color-light-gray: #eeeeee;
+  --color-off-black: #0f172b;
+  --color-confirmation-green: #8DC63F;
 }
 
 
@@ -47,7 +51,7 @@
 }
 
 .table-header {
-  background-color: #F9FAFB;
+  background-color: var(--color-off-white);
   border-bottom: solid;
   border-width: thin;
   overflow: hidden;
@@ -84,11 +88,11 @@ button:active {
 button.back-button {
   border-width: 1px;
   border-color: black;
-  background-color: #0f172b;
+  background-color: var(--color-off-black);
   color:white;
 }
 button.back-button:hover {
-  background-color: #878b95;
+  background-color: #5c5c5c;
 }
 
 /*default forward buttons*/
@@ -99,7 +103,7 @@ button.forward-button {
   color: black;
 }
 button.forward-button:hover {
-  background-color: #33b474;
+  background-color: #95eec2;
 }
 
 
