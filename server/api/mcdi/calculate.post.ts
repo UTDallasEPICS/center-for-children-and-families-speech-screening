@@ -1,21 +1,69 @@
-// The endpoint will receive parsed CSV data + form type from the frontend
-// The algorithm will be:
-//   - Map CSV columns to standardized fields based on form type
-//   - Compute combined totals for bilingual forms (SE, ME)
-//   - Calculate vocal score (total words known - pull from total_expressive col Q -> col R)
-//   - Calculate lower and higher percentile (Based on age (in months), sex, and combined receptive/expressive vocabulary)
-//     words based on percentile tables (When percentile is not given exact)
-//   - Calculate combined word percentile
-//   - Determine Pass/At Risk status (if risk < 20 or "<5" is given then the child is at risk)
-//   - Return processed rows ready for the results
-//   - (((Score - LowerWords) / (UpperWords - LowerWords)) × (UpperPercentile - LowerPercentile)) + LowerPercentile
-
 import { defineEventHandler, readBody } from 'h3'
+import { getTable, type PercentileTable } from './mcdiPercentileTables'
 
-// trims the 00:00:00 that openpyxl appends to date fields
+// Strips the 00:00:00 that openpyxl appends to date fields
 function cleanDate(val: string): string {
   if (!val) return ''
   return val.split(' ')[0]
+}
+
+type PercentileResult = number | '<5'
+type StatusResult = 'At Risk' | 'Typical'
+
+const PERCENTILE_ROWS = [99, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5]
+
+// Interpolates a score against a percentile table — returns '<5', 99, or a rounded integer
+function lookupPercentile(table: PercentileTable, age: number, score: number): PercentileResult {
+  const rows = PERCENTILE_ROWS.map(pct => ({ pct, threshold: table[pct]?.[age] ?? 0 }))
+
+  if (score >= rows[0].threshold) return 99
+  if (score < rows[rows.length - 1].threshold) return '<5'
+
+  for (let i = 0; i < rows.length - 1; i++) {
+    const higher = rows[i]
+    const lower  = rows[i + 1]
+    if (score >= lower.threshold && score < higher.threshold) {
+      if (higher.threshold === lower.threshold) return lower.pct
+      const interpolated =
+        ((score - lower.threshold) / (higher.threshold - lower.threshold)) *
+        (higher.pct - lower.pct) + lower.pct
+      return Math.round(interpolated)
+    }
+  }
+
+  return rows[rows.length - 1].pct
+}
+
+function getStatus(pct: PercentileResult): StatusResult {
+  if (pct === '<5') return 'At Risk'
+  if (typeof pct === 'number' && pct <= 20) return 'At Risk'
+  return 'Typical'
+}
+
+// engSF_8_18 and SE_8_18 — WU from B.2/B.3, WP from B.5/B.6
+function calcPercentiles_SF_8_18(gender: string, age: number, wuScore: number, wpScore: number) {
+  const wuPct = lookupPercentile(getTable('B', 'WU', '8_18', gender), age, wuScore)
+  const wpPct = lookupPercentile(getTable('B', 'WP', '8_18', gender), age, wpScore)
+  return { WU_Precentile: wuPct, WP_Percentile: wpPct, WU_Status: getStatus(wuPct), WP_Status: getStatus(wpPct) }
+}
+
+// engSF_16_30 and SE_16_30 — WP only from B.8/B.9
+function calcPercentiles_SF_16_30(gender: string, age: number, wpScore: number) {
+  const wpPct = lookupPercentile(getTable('B', 'WP', '16_30', gender), age, wpScore)
+  return { WP_Percentile: wpPct, WP_Status: getStatus(wpPct) }
+}
+
+// ME_8_18 — WU from A.5/A.6, WP from A.8/A.9, combined Eng+Mandarin scores
+function calcPercentiles_LF_8_18(gender: string, age: number, wuScore: number, wpScore: number) {
+  const wuPct = lookupPercentile(getTable('A', 'WU', '8_18', gender), age, wuScore)
+  const wpPct = lookupPercentile(getTable('A', 'WP', '8_18', gender), age, wpScore)
+  return { WU_Precentile: wuPct, WP_Percentile: wpPct, WU_Status: getStatus(wuPct), WP_Status: getStatus(wpPct) }
+}
+
+// ME_16_30 — WP only from A.20/A.21, combined Eng+Mandarin scores
+function calcPercentiles_LF_16_30(gender: string, age: number, wpScore: number) {
+  const wpPct = lookupPercentile(getTable('A', 'WP', '16_30', gender), age, wpScore)
+  return { WP_Percentile: wpPct, WP_Status: getStatus(wpPct) }
 }
 
 export default defineEventHandler(async (event) => {
@@ -25,252 +73,217 @@ export default defineEventHandler(async (event) => {
   console.log('[calculate] Form type:', formType)
   console.log('[calculate] Rows received:', rows?.length)
 
-  const today = new Date().toISOString().split('T')[0]
-
   let outputRows: Record<string, any>[] = []
 
-  // ─── engSF 8-18 ───────────────────────────────────────────────────────────
-  // Monolingual English, 8-18 months
-  // Two percentiles: WU (receptive) and WP (expressive)
   if (formType === 'engSF_8_18') {
-    outputRows = rows.map((row: Record<string, any>) => ({
-      child_id: '',
-      chname_reg: row.chname_reg ?? '',
-      chlname_reg: row.chlname_reg ?? '',
-      sem: row.sem ?? '',
-      site: row.site ?? '',
-      chdob_reg: cleanDate(row.chdob_reg ?? ''),
-      chgender_reg: row.chgender_reg ?? '',
-      age: row.age ?? '',
-      age_mcdi: row.age_mcdi ?? '',
-      otherlangexpo: row.otherlangexpo ?? '',
-      language: row.language ?? '',
-      total_receptive_eng_mon: row.total_receptive_eng_mon ?? '',
-      total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
-      WU_Precentile: '',
-      WP_Percentile: '',
-      WU_Status: '',
-      WP_Status: '',
-      mcdi_english_short_form_818_months_timestamp: row.mcdi_english_short_form_818_months_timestamp ?? '',
-      date_of_report: today,
-    }))
+    outputRows = rows.map((row: Record<string, any>) => {
+      const age     = parseInt(row.age_mcdi)
+      const gender  = row.chgender_reg ?? ''
+      const wuScore = parseFloat(row.total_receptive_eng_mon)  || 0
+      const wpScore = parseFloat(row.total_expressive_eng_mon) || 0
+      const pcts    = calcPercentiles_SF_8_18(gender, age, wuScore, wpScore)
+      return {
+        child_id:    '',
+        chname_reg:  row.chname_reg  ?? '',
+        chlname_reg: row.chlname_reg ?? '',
+        sem:         row.sem         ?? '',
+        site:        row.site        ?? '',
+        chdob_reg:   cleanDate(row.chdob_reg ?? ''),
+        chgender_reg: gender,
+        age:          row.age     ?? '',
+        age_mcdi:     row.age_mcdi ?? '',
+        otherlangexpo: row.otherlangexpo ?? '',
+        language:      row.language      ?? '',
+        total_receptive_eng_mon:  row.total_receptive_eng_mon  ?? '',
+        total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
+        ...pcts,
+        mcdi_english_short_form_818_months_timestamp: row.mcdi_english_short_form_818_months_timestamp ?? '',
+      }
+    })
   }
 
-  // ─── engSF 16-30 ──────────────────────────────────────────────────────────
-  // Monolingual English, 16-30 months
-  // One percentile: WP (expressive only)
   else if (formType === 'engSF_16_30') {
-    outputRows = rows.map((row: Record<string, any>) => ({
-      child_id: '',
-      chname_reg: row.chname_reg ?? '',
-      chlname_reg: row.chlname_reg ?? '',
-      sem: row.sem ?? '',
-      site: row.site ?? '',
-      chdob_reg: cleanDate(row.chdob_reg ?? ''),
-      chgender_reg: row.chgender_reg ?? '',
-      age: row.age ?? '',
-      age_mcdi: row.age_mcdi ?? '',
-      otherlangexpo: row.otherlangexpo ?? '',
-      language: row.language ?? '',
-      es2_english_total_mon: row.es2_english_total_mon ?? '',
-      WP_Percentile: '',
-      WP_Status: '',
-      mcdi_english_short_form_1630_months_timestamp: row.mcdi_english_short_form_1630_months_timestamp ?? '',
-      date_of_report: today,
-    }))
+    outputRows = rows.map((row: Record<string, any>) => {
+      const age     = parseInt(row.age_mcdi)
+      const gender  = row.chgender_reg ?? ''
+      const wpScore = parseFloat(row.es2_english_total_mon) || 0
+      const pcts    = calcPercentiles_SF_16_30(gender, age, wpScore)
+      return {
+        child_id:    '',
+        chname_reg:  row.chname_reg  ?? '',
+        chlname_reg: row.chlname_reg ?? '',
+        sem:         row.sem         ?? '',
+        site:        row.site        ?? '',
+        chdob_reg:   cleanDate(row.chdob_reg ?? ''),
+        chgender_reg: gender,
+        age:          row.age     ?? '',
+        age_mcdi:     row.age_mcdi ?? '',
+        otherlangexpo: row.otherlangexpo ?? '',
+        language:      row.language      ?? '',
+        es2_english_total_mon: row.es2_english_total_mon ?? '',
+        ...pcts,
+        mcdi_english_short_form_1630_months_timestamp: row.mcdi_english_short_form_1630_months_timestamp ?? '',
+      }
+    })
   }
 
-  // ─── SE 8-18 ──────────────────────────────────────────────────────────────
-  // Spanish-English bilingual, 8-18 months
-  // Computes combined receptive and expressive totals (eng + span)
-  // Two percentiles: WU (combined receptive) and WP (combined expressive)
   else if (formType === 'SE_8_18') {
     outputRows = rows.map((row: Record<string, any>) => {
-      const totalReceptive =
-        (parseFloat(row.total_receptive_eng) || 0) +
-        (parseFloat(row.total_receptive_span) || 0)
-      const totalExpressive =
-        (parseFloat(row.total_expressive_eng) || 0) +
-        (parseFloat(row.total_expressive_span) || 0)
+      const age     = parseInt(row.age_mcdi)
+      const gender  = row.chgender_reg ?? ''
+      const wuScore = parseFloat(row.total_receptive)  || 0
+      const wpScore = parseFloat(row.total_expressive) || 0
+      const pcts    = calcPercentiles_SF_8_18(gender, age, wuScore, wpScore)
       return {
-        child_id: '',
-        chname_reg: row.chname_reg ?? '',
+        child_id:    '',
+        chname_reg:  row.chname_reg  ?? '',
         chlname_reg: row.chlname_reg ?? '',
-        sem: row.sem ?? '',
-        site: row.site ?? '',
-        chdob_reg: cleanDate(row.chdob_reg ?? ''),
-        chgender_reg: row.chgender_reg ?? '',
-        age: row.age ?? '',
-        age_mcdi: row.age_mcdi ?? '',
+        sem:         row.sem         ?? '',
+        site:        row.site        ?? '',
+        chdob_reg:   cleanDate(row.chdob_reg ?? ''),
+        chgender_reg: gender,
+        age:          row.age     ?? '',
+        age_mcdi:     row.age_mcdi ?? '',
         otherlangexpo: row.otherlangexpo ?? '',
-        language: row.language ?? '',
-        total_receptive_eng: row.total_receptive_eng ?? '',
-        total_expressive_eng: row.total_expressive_eng ?? '',
-        total_receptive_span: row.total_receptive_span ?? '',
+        language:      row.language      ?? '',
+        total_receptive_eng:   row.total_receptive_eng   ?? '',
+        total_expressive_eng:  row.total_expressive_eng  ?? '',
+        total_receptive_span:  row.total_receptive_span  ?? '',
         total_expressive_span: row.total_expressive_span ?? '',
-        total_receptive: totalReceptive,
-        total_expressive: totalExpressive,
-        WU_Precentile: '',
-        WP_Percentile: '',
-        WU_Status: '',
-        WP_Status: '',
+        total_receptive:       row.total_receptive       ?? '',
+        total_expressive:      row.total_expressive      ?? '',
+        ...pcts,
         mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp: row.mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp ?? '',
-        date_of_report: today,
       }
     })
   }
 
-  // ─── SE 16-30 ─────────────────────────────────────────────────────────────
-  // Spanish-English bilingual, 16-30 months
-  // total_span_eng_expressive already provided in input (eng + span combined)
-  // One percentile: WP (combined expressive)
   else if (formType === 'SE_16_30') {
-    outputRows = rows.map((row: Record<string, any>) => ({
-      child_id: '',
-      chname_reg: row.chname_reg ?? '',
-      chlname_reg: row.chlname_reg ?? '',
-      sem: row.sem ?? '',
-      site: row.site ?? '',
-      chdob_reg: cleanDate(row.chdob_reg ?? ''),
-      chgender_reg: row.chgender_reg ?? '',
-      age: row.age ?? '',
-      age_mcdi: row.age_mcdi ?? '',
-      otherlangexpo: row.otherlangexpo ?? '',
-      language: row.language ?? '',
-      es2_english_total: row.es2_english_total ?? '',
-      es2_spanish_total: row.es2_spanish_total ?? '',
-      total_span_eng_expressive: row.total_span_eng_expressive ?? '',
-      WP_Percentile: '',
-      WP_Status: '',
-      mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp: row.mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp ?? '',
-      date_of_report: today,
-    }))
+    outputRows = rows.map((row: Record<string, any>) => {
+      const age     = parseInt(row.age_mcdi)
+      const gender  = row.chgender_reg ?? ''
+      const wpScore = parseFloat(row.total_span_eng_expressive) || 0
+      const pcts    = calcPercentiles_SF_16_30(gender, age, wpScore)
+      return {
+        child_id:    '',
+        chname_reg:  row.chname_reg  ?? '',
+        chlname_reg: row.chlname_reg ?? '',
+        sem:         row.sem         ?? '',
+        site:        row.site        ?? '',
+        chdob_reg:   cleanDate(row.chdob_reg ?? ''),
+        chgender_reg: gender,
+        age:          row.age     ?? '',
+        age_mcdi:     row.age_mcdi ?? '',
+        otherlangexpo: row.otherlangexpo ?? '',
+        language:      row.language      ?? '',
+        es2_english_total:         row.es2_english_total         ?? '',
+        es2_spanish_total:         row.es2_spanish_total         ?? '',
+        total_span_eng_expressive: row.total_span_eng_expressive ?? '',
+        ...pcts,
+        mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp: row.mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp ?? '',
+      }
+    })
   }
 
-  // ─── ME 8-18 ──────────────────────────────────────────────────────────────
-  // Mandarin-English bilingual, 8-18 months
-  // Computes combined receptive and expressive totals (eng + zh)
-  // Two percentiles: WU (combined receptive) and WP (combined expressive)
   else if (formType === 'ME_8_18') {
     outputRows = rows.map((row: Record<string, any>) => {
-      const totalReceptive =
-        (parseFloat(row.total_receptive_eng_fa66b7) || 0) +
-        (parseFloat(row.total_receptive_zh) || 0)
-      const totalExpressive =
-        (parseFloat(row.total_expressive_eng_77b77e) || 0) +
-        (parseFloat(row.total_expressive_zh) || 0)
+      const age     = parseInt(row.age_mcdi)
+      const gender  = row.chgender_reg ?? ''
+      const totalWU = (parseFloat(row.total_receptive_eng_fa66b7)  || 0) + (parseFloat(row.total_receptive_zh)  || 0)
+      const totalWP = (parseFloat(row.total_expressive_eng_77b77e) || 0) + (parseFloat(row.total_expressive_zh) || 0)
+      const pcts    = calcPercentiles_LF_8_18(gender, age, totalWU, totalWP)
       return {
-        child_id: '',
-        chname_reg: row.chname_reg ?? '',
+        child_id:    '',
+        chname_reg:  row.chname_reg  ?? '',
         chlname_reg: row.chlname_reg ?? '',
-        sem: row.sem ?? '',
-        site: row.site ?? '',
-        chdob_reg: cleanDate(row.chdob_reg ?? ''),
-        chgender_reg: row.chgender_reg ?? '',
-        age: row.age ?? '',
-        age_mcdi: row.age_mcdi ?? '',
+        sem:         row.sem         ?? '',
+        site:        row.site        ?? '',
+        chdob_reg:   cleanDate(row.chdob_reg ?? ''),
+        chgender_reg: gender,
+        age:          row.age     ?? '',
+        age_mcdi:     row.age_mcdi ?? '',
         otherlangexpo: row.otherlangexpo ?? '',
-        language: row.language ?? '',
-        total_receptive_eng_fa66b7: row.total_receptive_eng_fa66b7 ?? '',
+        language:      row.language      ?? '',
+        total_receptive_eng_fa66b7:  row.total_receptive_eng_fa66b7  ?? '',
         total_expressive_eng_77b77e: row.total_expressive_eng_77b77e ?? '',
-        total_receptive_zh: row.total_receptive_zh ?? '',
-        total_expressive_zh: row.total_expressive_zh ?? '',
-        total_receptive: totalReceptive,
-        total_expressive: totalExpressive,
-        WU_Precentile: '',
-        WP_Percentile: '',
-        WU_Status: '',
-        WP_Status: '',
+        total_receptive_zh:          row.total_receptive_zh          ?? '',
+        total_expressive_zh:         row.total_expressive_zh         ?? '',
+        total_receptive:  totalWU,
+        total_expressive: totalWP,
+        ...pcts,
         mcdimandarin_timestamp: row.mcdimandarin_timestamp ?? '',
-        date_of_report: today,
       }
     })
   }
 
-  // ─── ME 16-30 ─────────────────────────────────────────────────────────────
-  // Mandarin-English bilingual, 16-30 months
-  // Computes combined expressive total (eng + zh)
-  // One percentile: WP (combined expressive)
   else if (formType === 'ME_16_30') {
     outputRows = rows.map((row: Record<string, any>) => {
-      const totalExpressive =
-        (parseFloat(row.total_expressive_eng_77b77e) || 0) +
-        (parseFloat(row.total_expressive_zh) || 0)
+      const age     = parseInt(row.age_mcdi)
+      const gender  = row.chgender_reg ?? ''
+      const totalWP = (parseFloat(row.total_expressive_eng_77b77e) || 0) + (parseFloat(row.total_expressive_zh) || 0)
+      const pcts    = calcPercentiles_LF_16_30(gender, age, totalWP)
       return {
-        child_id: '',
-        chname_reg: row.chname_reg ?? '',
+        child_id:    '',
+        chname_reg:  row.chname_reg  ?? '',
         chlname_reg: row.chlname_reg ?? '',
-        sem: row.sem ?? '',
-        site: row.site ?? '',
-        chdob_reg: cleanDate(row.chdob_reg ?? ''),
-        chgender_reg: row.chgender_reg ?? '',
-        age: row.age ?? '',
-        age_mcdi: row.age_mcdi ?? '',
+        sem:         row.sem         ?? '',
+        site:        row.site        ?? '',
+        chdob_reg:   cleanDate(row.chdob_reg ?? ''),
+        chgender_reg: gender,
+        age:          row.age     ?? '',
+        age_mcdi:     row.age_mcdi ?? '',
         otherlangexpo: row.otherlangexpo ?? '',
-        language: row.language ?? '',
+        language:      row.language      ?? '',
         total_expressive_eng_77b77e: row.total_expressive_eng_77b77e ?? '',
-        total_expressive_zh: row.total_expressive_zh ?? '',
-        total_expressive: totalExpressive,
-        WP_Percentile: '',
-        WP_Status: '',
+        total_expressive_zh:         row.total_expressive_zh         ?? '',
+        total_expressive: totalWP,
+        ...pcts,
         mcdimandarin_timestamp: row.mcdimandarin_timestamp ?? '',
-        date_of_report: today,
       }
     })
   }
 
-  // ─── engOther 8-18 ────────────────────────────────────────────────────────
-  // English + other language (not Spanish or Mandarin), 8-18 months
-  // No percentile — just pass through raw English word counts
   else if (formType === 'engOther_8_18') {
+    // No percentile for engOther — pass through only
     outputRows = rows.map((row: Record<string, any>) => ({
-      child_id: '',
-      chname_reg: row.chname_reg ?? '',
+      child_id:    '',
+      chname_reg:  row.chname_reg  ?? '',
       chlname_reg: row.chlname_reg ?? '',
-      sem: row.sem ?? '',
-      site: row.site ?? '',
-      chdob_reg: cleanDate(row.chdob_reg ?? ''),
+      sem:         row.sem         ?? '',
+      site:        row.site        ?? '',
+      chdob_reg:   cleanDate(row.chdob_reg ?? ''),
       chgender_reg: row.chgender_reg ?? '',
-      age: row.age ?? '',
-      age_mcdi: row.age_mcdi ?? '',
+      age:          row.age     ?? '',
+      age_mcdi:     row.age_mcdi ?? '',
       otherlangexpo: row.otherlangexpo ?? '',
-      language: row.language ?? '',
-      specify_language: row.specify_language ?? '',
-      total_receptive_eng_mon: row.total_receptive_eng_mon ?? '',
+      language:      row.language      ?? '',
+      specify_language:         row.specify_language         ?? '',
+      total_receptive_eng_mon:  row.total_receptive_eng_mon  ?? '',
       total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
-      mcdi_english_short_form_818_months_timestamp: row.mcdi_english_short_form_818_months_timestamp ?? '',
+      mcdi_english_short_form_818_months_timestamp:  row.mcdi_english_short_form_818_months_timestamp  ?? '',
       mcdi_english_short_form_1630_months_timestamp: row.mcdi_english_short_form_1630_months_timestamp ?? '',
-      date_of_report: today,
     }))
   }
 
-  // ─── engOther 16-30 ───────────────────────────────────────────────────────
-  // English + other language (not Spanish or Mandarin), 16-30 months
-  // No percentile — just pass through raw English word counts
   else if (formType === 'engOther_16_30') {
     outputRows = rows.map((row: Record<string, any>) => ({
-      child_id: '',
-      chname_reg: row.chname_reg ?? '',
+      child_id:    '',
+      chname_reg:  row.chname_reg  ?? '',
       chlname_reg: row.chlname_reg ?? '',
-      sem: row.sem ?? '',
-      site: row.site ?? '',
-      chdob_reg: cleanDate(row.chdob_reg ?? ''),
+      sem:         row.sem         ?? '',
+      site:        row.site        ?? '',
+      chdob_reg:   cleanDate(row.chdob_reg ?? ''),
       chgender_reg: row.chgender_reg ?? '',
-      age: row.age ?? '',
-      age_mcdi: row.age_mcdi ?? '',
+      age:          row.age     ?? '',
+      age_mcdi:     row.age_mcdi ?? '',
       otherlangexpo: row.otherlangexpo ?? '',
-      language: row.language ?? '',
-      specify_language: row.specify_language ?? '',
+      language:      row.language      ?? '',
+      specify_language:         row.specify_language         ?? '',
       total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
-      mcdi_english_short_form_1630_months_timestamp: row.mcdi_english_short_form_1630_months_timestamp ?? '',
-      date_of_report: today,
     }))
   }
 
-  console.log('[calculate] Output rows:', JSON.stringify(outputRows, null, 2))
+  console.log('[calculate] Output rows:', outputRows.length)
 
-  return {
-    success: true,
-    outputRows,
-  }
+  return { success: true, outputRows }
 })

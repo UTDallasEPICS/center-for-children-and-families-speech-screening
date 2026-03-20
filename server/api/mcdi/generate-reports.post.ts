@@ -1,22 +1,13 @@
-// Receives outputRows + formType + selectedIndices from the frontend
-// For each selected row:
-//   1. Pick the correct Word template based on formType and AT RISK vs TYPICAL status
-//   2. Fill in child info fields (xx/XX placeholders)
-//   3. Fill in score and percentile fields (ENTERnumber placeholders) positionally
-//   4. Zip all generated .docx files
-//   5. Return base64 encoded zip for frontend to trigger download
-
 import { defineEventHandler, readBody } from 'h3'
 import { join } from 'path'
 import { readFileSync } from 'fs'
 import PizZip from 'pizzip'
-import Docxtemplater from 'docxtemplater'
 import archiver from 'archiver'
 import { PassThrough } from 'stream'
 
 const TEMPLATES_DIR = join(process.cwd(), 'public', 'templates')
 
-// Template filenames per form type and status
+// Template filenames per form type — engOther uses a single template, others split by AT RISK vs TYPICAL
 const TEMPLATES: Record<string, { atRisk: string; typical: string } | { single: string }> = {
   engSF_8_18:    { atRisk: 'MBCDI report English 8-18mo_AT RISK.docx',   typical: 'MBCDI report English 8-18mo_TYPICAL.docx' },
   engSF_16_30:   { atRisk: 'MBCDI report English 16-30mo_AT RISK.docx',  typical: 'MBCDI report English 16-30mo_TYPICAL.docx' },
@@ -28,31 +19,24 @@ const TEMPLATES: Record<string, { atRisk: string; typical: string } | { single: 
   engOther_16_30:{ single: 'MCDI report template_DNE bilingual 16-30 mo.docx' },
 }
 
-// Function 
+// 8-18mo: at risk if WU or WP <= 20th pct. 16-30mo: WP only
 function isAtRisk(formType: string, row: Record<string, any>): boolean {
-  // engOther forms never have a percentile
   if (formType.startsWith('engOther')) return false
 
   const wu = row.WU_Precentile
   const wp = row.WP_Percentile
 
-  // a value is at risk if it's ≤ 20 or is the string '<5'
   const atRiskValue = (val: any): boolean => {
     if (val === '<5') return true
     const num = parseFloat(val)
     return !isNaN(num) && num <= 20
   }
 
-  // 8-18 month forms: EITHER WU or WP ≤ 20 = at risk
-  if (formType.endsWith('8_18')) {
-    return atRiskValue(wu) || atRiskValue(wp)
-  }
-
-  // 16-30 month forms: only WP matters
+  if (formType.endsWith('8_18')) return atRiskValue(wu) || atRiskValue(wp)
   return atRiskValue(wp)
 }
 
-// Format a date string to spelled-out format e.g. "March 5, 2026"
+// Format date string to spelled-out format like March 5, 2026
 function formatDate(val: string): string {
   if (!val) return ''
   const d = new Date(val)
@@ -60,154 +44,133 @@ function formatDate(val: string): string {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-// Get all runs in a paragraph into a single run
-// needed because Word splits text across runs unpredictably
-// e.g. "ENTER" + "number" instead of "ENTERnumber"
-function consolidateRuns(paragraph: any) {
-  if (!paragraph.runs || paragraph.runs.length <= 1) return
-  const fullText = paragraph.runs.map((r: any) => r.text).join('')
-  // put all text in first run, clear the rest
-  paragraph.runs[0].text = fullText
-  for (let i = 1; i < paragraph.runs.length; i++) {
-    paragraph.runs[i].text = ''
-  }
+// Escape special characters before inserting into XML
+function xmlEscape(val: string): string {
+  return val
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
 }
 
-// Replace placeholder string 
-function replacePlaceholder(doc: any, placeholder: string, value: string) {
-  const body = doc.getZip().files['word/document.xml']
-  if (!body) return
-
-  // Use docxtemplater's method to get all paragraphs
-  const xml = body.asText()
-  const replaced = xml.split(placeholder).join(value)
-  doc.getZip().file('word/document.xml', replaced)
-}
-
-// Build the values to substitute into ENTERnumber slots positionally per form type
+// Ordered list of score/percentile values to substitute into ENTERnumber slots
 function getPositionalValues(formType: string, row: Record<string, any>): string[] {
   switch (formType) {
     case 'engSF_8_18':
-      // Receptive (out of 89), Expressive (out of 89), WU percentile%, WP percentile%
       return [
-        row.total_receptive_eng_mon ?? '',
-        row.total_expressive_eng_mon ?? '',
-        row.WU_Precentile ?? '',
-        row.WP_Percentile ?? '',
+        String(row.total_receptive_eng_mon  ?? ''),
+        String(row.total_expressive_eng_mon ?? ''),
+        String(row.WU_Precentile ?? ''),
+        String(row.WP_Percentile ?? ''),
       ]
     case 'engSF_16_30':
-      // Expressive (out of 100), WP percentile%
       return [
-        row.es2_english_total_mon ?? '',
-        row.WP_Percentile ?? '',
+        String(row.es2_english_total_mon ?? ''),
+        String(row.WP_Percentile ?? ''),
       ]
     case 'SE_8_18':
-      // Eng receptive (89), Eng expressive (89), Span receptive (105), Span expressive (105),
-      // Combined receptive, Combined expressive, WU percentile%, WP percentile%
-      // Spanish section repeats same values
       return [
-        row.total_receptive_eng ?? '',
-        row.total_expressive_eng ?? '',
-        row.total_receptive_span ?? '',
-        row.total_expressive_span ?? '',
-        row.total_receptive ?? '',
-        row.total_expressive ?? '',
-        row.WU_Precentile ?? '',
-        row.WP_Percentile ?? '',
+        String(row.total_receptive_eng   ?? ''),
+        String(row.total_expressive_eng  ?? ''),
+        String(row.total_receptive_span  ?? ''),
+        String(row.total_expressive_span ?? ''),
+        String(row.total_receptive       ?? ''),
+        String(row.total_expressive      ?? ''),
+        String(row.WU_Precentile         ?? ''),
+        String(row.WP_Percentile         ?? ''),
       ]
     case 'SE_16_30':
-      // Eng expressive (100), Span expressive (100), Combined expressive, WP percentile%
-      // Spanish section repeats same values
       return [
-        row.es2_english_total ?? '',
-        row.es2_spanish_total ?? '',
-        row.total_span_eng_expressive ?? '',
-        row.WP_Percentile ?? '',
+        String(row.es2_english_total          ?? ''),
+        String(row.es2_spanish_total          ?? ''),
+        String(row.total_span_eng_expressive  ?? ''),
+        String(row.WP_Percentile              ?? ''),
       ]
     case 'ME_8_18':
-      // Eng receptive (680), Eng expressive (680), Mand receptive (799), Mand expressive (799),
-      // Combined receptive, Combined expressive, WU percentile%, WP percentile%
       return [
-        row.total_receptive_eng_fa66b7 ?? '',
-        row.total_expressive_eng_77b77e ?? '',
-        row.total_receptive_zh ?? '',
-        row.total_expressive_zh ?? '',
-        row.total_receptive ?? '',
-        row.total_expressive ?? '',
-        row.WU_Precentile ?? '',
-        row.WP_Percentile ?? '',
+        String(row.total_receptive_eng_fa66b7  ?? ''),
+        String(row.total_expressive_eng_77b77e ?? ''),
+        String(row.total_receptive_zh          ?? ''),
+        String(row.total_expressive_zh         ?? ''),
+        String(row.total_receptive             ?? ''),
+        String(row.total_expressive            ?? ''),
+        String(row.WU_Precentile               ?? ''),
+        String(row.WP_Percentile               ?? ''),
       ]
     case 'ME_16_30':
-      // Eng expressive (680), Mand expressive (799), Combined expressive, WP percentile%
       return [
-        row.total_expressive_eng_77b77e ?? '',
-        row.total_expressive_zh ?? '',
-        row.total_expressive ?? '',
-        row.WP_Percentile ?? '',
+        String(row.total_expressive_eng_77b77e ?? ''),
+        String(row.total_expressive_zh         ?? ''),
+        String(row.total_expressive            ?? ''),
+        String(row.WP_Percentile               ?? ''),
       ]
     case 'engOther_8_18':
-      // Receptive (out of 89), Expressive (out of 89) — no percentile
       return [
-        row.total_receptive_eng_mon ?? '',
-        row.total_expressive_eng_mon ?? '',
+        String(row.total_receptive_eng_mon  ?? ''),
+        String(row.total_expressive_eng_mon ?? ''),
       ]
     case 'engOther_16_30':
-      // Expressive (out of 100) — no percentile
       return [
-        row.total_expressive_eng_mon ?? '',
+        String(row.total_expressive_eng_mon ?? ''),
       ]
     default:
       return []
   }
 }
 
-// Fill a Word template with child data and return the filled buffer
+// Fills a Word template with child data via direct XML string replacements
 function fillTemplate(templatePath: string, row: Record<string, any>, formType: string): Buffer {
   const content = readFileSync(templatePath, 'binary')
   const zip = new PizZip(content)
-
-  // manipulate the raw xml
   let xml = zip.file('word/document.xml')!.asText()
 
-  // ── Child info fields ──────────────────────────────────────────────────────
-  const fullName = `${row.chname_reg ?? ''} ${row.chlname_reg ?? ''}`.trim()
-  const dateOfReport = formatDate(row.date_of_report ?? '')
-  const dateOfMcdi = formatDate(
-    row.mcdi_english_short_form_818_months_timestamp ||
+  const fullName   = xmlEscape(`${row.chname_reg ?? ''} ${row.chlname_reg ?? ''}`.trim())
+  const gender     = xmlEscape(String(row.chgender_reg ?? ''))
+  const age        = xmlEscape(String(row.age_mcdi ?? row.age ?? ''))
+  const birthDate  = xmlEscape(formatDate(row.chdob_reg ?? ''))
+  const dateOfMcdi = xmlEscape(formatDate(
+    row.mcdi_english_short_form_818_months_timestamp  ||
     row.mcdi_english_short_form_1630_months_timestamp ||
-    row.mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp ||
-    row.mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp ||
+    row.mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp  ||
+    row.mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp  ||
     row.mcdimandarin_timestamp || ''
-  )
-  const birthDate = formatDate(row.chdob_reg ?? '')
-  const age = row.age_mcdi ?? row.age ?? ''
-  const gender = row.chgender_reg ?? ''
+  ))
+  const dateOfReport = xmlEscape(formatDate(new Date().toISOString().split('T')[0]))
 
-  // Replace child info placeholders — handle both xx and xxx versions
-  xml = xml.split('xxx').join(gender)  
-  xml = xml.split('xx').join(fullName) 
-
-  // Replace date placeholders — XX used for all date fields
-  // We replace them in document order Date of Report, Date of MCDI, Birth Date
-  let dateReplacements = [dateOfReport, dateOfMcdi, birthDate]
-  let dateIdx = 0
-  xml = xml.replace(/XX/g, () => dateReplacements[dateIdx++] ?? 'XX')
-
-  // Age — appears as 'xx' 
-  // Age is in its own cell
-  // Re-replace age specifically by targeting the Age months context
+  // Word sometimes splits 'ENTERnumber' across two runs — merge before replacing
   xml = xml.replace(
-    /Age \(months\)[^<]*<\/w:t>/g,
-    (match) => match.replace(fullName, age)
+    /(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)ENTER(<\/w:t><\/w:r>)(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)number(<\/w:t><\/w:r>)/g,
+    '$3ENTERnumber$4'
   )
 
-  // ── ENTERnumber fields (positional) ───────────────────────────────────────
-  const values = getPositionalValues(formType, row)
+  // Replace name, gender, age placeholders
+  xml = xml.replace(/(<w:t[^>]*>)xx(<\/w:t>)/g,  (_, o, c) => `${o}${fullName}${c}`)
+  xml = xml.replace(/(<w:t[^>]*>)xxx(<\/w:t>)/g, (_, o, c) => `${o}${gender}${c}`)
+
+  // Gender and Género cells also use 'xx' so target them specifically after name replacement
+  xml = xml.replace(/(Gender(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${gender}${c}`)
+  xml = xml.replace(/(G[eé]nero(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${gender}${c}`)
+
+  // Age and Edad cells also use 'xx'
+  xml = xml.replace(/(Age[\s\S]*?months[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${age}${c}`)
+  xml = xml.replace(/(Edad[\s\S]*?meses[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${age}${c}`)
+
+  // XX date placeholders in order: Date of Report, Date of MCDI, Birth Date — doubled for bilingual templates
+  const dateValues = [dateOfReport, dateOfMcdi, birthDate, dateOfReport, dateOfMcdi, birthDate]
+  let dateIdx = 0
+  xml = xml.replace(/(<w:t[^>]*>)XX(<\/w:t>)/g, (_, o, c) => `${o}${dateValues[dateIdx++] ?? ''}${c}`)
+
+  // ENTERnumber slots filled positionally — SE/ME templates doubled for their second section
+  const baseValues = getPositionalValues(formType, row)
+  const allValues  = ['SE_8_18', 'SE_16_30', 'ME_8_18', 'ME_16_30'].includes(formType)
+    ? [...baseValues, ...baseValues]
+    : baseValues
+
   let valueIdx = 0
-  xml = xml.replace(/ENTERnumber/g, () => String(values[valueIdx++] ?? ''))
+  xml = xml.replace(/(<w:t[^>]*>)ENTERnumber(<\/w:t>)/g, (_, o, c) => `${o}${xmlEscape(allValues[valueIdx++] ?? '')}${c}`)
 
   zip.file('word/document.xml', xml)
-
   return zip.generate({ type: 'nodebuffer' }) as Buffer
 }
 
@@ -224,7 +187,7 @@ export default defineEventHandler(async (event) => {
     return { success: false, message: `Unknown form type: ${formType}` }
   }
 
-  // Build zip in memory
+  // Build zip in memory, one filled docx per selected row
   const passThrough = new PassThrough()
   const archive = archiver('zip', { zlib: { level: 6 } })
   archive.pipe(passThrough)
@@ -233,7 +196,6 @@ export default defineEventHandler(async (event) => {
     const row = outputRows[idx]
     if (!row) continue
 
-    // Pick template file
     let templateFile: string
     if ('single' in templateConfig) {
       templateFile = templateConfig.single
@@ -245,15 +207,13 @@ export default defineEventHandler(async (event) => {
     const docBuffer = fillTemplate(templatePath, row, formType)
 
     const firstName = (row.chname_reg ?? 'Unknown').replace(/\s+/g, '_')
-    const lastName = (row.chlname_reg ?? 'Unknown').replace(/\s+/g, '_')
-    const docName = `${firstName}_${lastName}_${formType}.docx`
-
-    archive.append(docBuffer, { name: docName })
+    const lastName  = (row.chlname_reg ?? 'Unknown').replace(/\s+/g, '_')
+    archive.append(docBuffer, { name: `${firstName}_${lastName}_${formType}.docx` })
   }
 
   await archive.finalize()
 
-  // Collect zip buffer from stream
+  // Collect zip stream into buffer and return as base64
   const chunks: Buffer[] = []
   await new Promise<void>((resolve, reject) => {
     passThrough.on('data', (chunk) => chunks.push(chunk))
@@ -261,17 +221,10 @@ export default defineEventHandler(async (event) => {
     passThrough.on('error', reject)
   })
 
-  const zipBuffer = Buffer.concat(chunks)
-  const base64 = zipBuffer.toString('base64')
-
-  const today = new Date().toISOString().split('T')[0]
+  const base64   = Buffer.concat(chunks).toString('base64')
+  const today    = new Date().toISOString().split('T')[0]
   const fileName = `${formType}_reports_${today}.zip`
 
   console.log('[generate-reports] Zip generated:', fileName)
-
-  return {
-    success: true,
-    fileName,
-    base64,
-  }
+  return { success: true, fileName, base64 }
 })
