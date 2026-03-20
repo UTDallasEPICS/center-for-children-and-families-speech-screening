@@ -48,8 +48,6 @@
       <header class="page-header">
         <h1>Manage Users</h1> 
 
-        
-        <button @click ="insertUser" class="btn-primary">Add Users</button>
         <!--<p>{{ new Date(now).toLocaleTimeString() }}</p>-->
       </header>
 
@@ -58,7 +56,11 @@
 
         <!-- Users List Card -->
         <div class="userlist">
-          <h2 class="userlist-title">Current Users</h2>
+          
+          <div class = "flex items-center justify-between">
+            <h2 class="userlist-title">Current Users</h2>
+            <button  @click ="insertUser" class="btn-primary">Add Users</button>
+          </div>
 
           <table class="users-table">
             <thead>
