@@ -1,3 +1,4 @@
+
 <template>
   <div class="layout">
     <aside class="sidebar">
@@ -59,7 +60,13 @@
           
           <div class = "flex items-center justify-between">
             <h2 class="userlist-title">Current Users</h2>
-            <button  @click ="insertUser" class="btn-primary">Add Users</button>
+            <button  @click ="showModal = true" class="btn-primary">Add Users</button>
+            <addUsersModal 
+              v-model:showModal = "showModal"
+              v-model:netIds="netIds"
+              @submit = "handleSubmit"
+            />
+
           </div>
 
           <table class="users-table">
@@ -91,30 +98,23 @@
   </div>
 
   <!--Modal setup-->
-  <div v-if="showModal" class = "modal-overlay">
-    <div class = "modal">
-      <h1>Enter the NetId of users you want to give access to</h1>
-
-      <input type="text" placeholder="Type NetID here" class="modal-input"/>
-
-      <div class="modal-actions">
-        <button @click = closeModal class="btn-danger"> Cancel</button>
-          <button class=" btn-primary"> Submit</button> 
-
-      </div>
-
-    </div>
-  </div>
 </template>
 
 <style src="../assets/css/main.css"></style>
 
 <script setup>
   import { ref } from 'vue'
+  import addUsersModal from '~/components/addUsersModal.vue'
   import { date } from 'zod'
 
-  const users = ref(null)
   const showModal = ref(false)
+  const netIds = ref('')
+  const users = ref(null)
+
+  const handleSubmit = (ids) => {
+    console.log(ids)
+  }
+
   const test = [
     {
       name: 'Samuel Ma',
@@ -140,13 +140,6 @@
     return Math.floor(daysTimeLeft)
   }
 
-  const insertUser = () => {
-    showModal.value = true
-  }
-
-  const closeModal = () => {
-    showModal.value = false
-  }
 
 </script>
 
