@@ -1,3 +1,4 @@
+
 <template>
   <div class="layout">
     <aside class="sidebar">
@@ -46,16 +47,27 @@
     <div class="users-page">
       <!-- Page Header -->
       <header class="page-header">
-        <h1>Manage Users</h1>
-        <p>{{ new Date(now).toLocaleTimeString() }}</p>
+        <h1>Manage Users</h1> 
+
+        <!--<p>{{ new Date(now).toLocaleTimeString() }}</p>-->
       </header>
 
       <section class="content">
-        <!-- Add User Button -->
+        
 
         <!-- Users List Card -->
         <div class="userlist">
-          <h2 class="userlist-title">Current Users</h2>
+          
+          <div class = "flex items-center justify-between">
+            <h2 class="userlist-title">Current Users</h2>
+            <button  @click ="showModal = true" class="btn-primary">Add Users</button>
+            <addUsersModal 
+              v-model:showModal = "showModal"
+              v-model:netIds="netIds"
+              @submit = "handleSubmit"
+            />
+
+          </div>
 
           <table class="users-table">
             <thead>
@@ -84,14 +96,24 @@
       </section>
     </div>
   </div>
+
+  <!--Modal setup-->
 </template>
 
 <style src="../assets/css/main.css"></style>
 
 <script setup>
   import { ref } from 'vue'
+  import addUsersModal from '~/components/addUsersModal.vue'
   import { date } from 'zod'
+
+  const showModal = ref(false)
+  const netIds = ref('')
   const users = ref(null)
+
+  const handleSubmit = (ids) => {
+    console.log(ids)
+  }
 
   const test = [
     {
@@ -117,4 +139,7 @@
     const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
     return Math.floor(daysTimeLeft)
   }
+
+
 </script>
+
