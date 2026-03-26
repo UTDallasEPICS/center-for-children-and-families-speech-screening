@@ -123,7 +123,6 @@
   
   const showModal = ref(false)
   const netIds = ref('')
-  const users = ref(null)
 
   const handleSubmit = (ids) => {
     console.log(ids)
