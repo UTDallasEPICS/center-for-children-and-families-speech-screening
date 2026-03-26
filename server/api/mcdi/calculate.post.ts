@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody } from 'h3'
-import { getTable, type PercentileTable } from './mcdiPercentileTables'
+import { getTable, type PercentileTable } from '../../utils/mcdiPercentileTables'
 
 // Strips the 00:00:00 that openpyxl appends to date fields
 function cleanDate(val: string): string {
