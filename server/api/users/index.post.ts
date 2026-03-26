@@ -11,9 +11,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  const { name, email, role } = body;
-
-  const cleanEmail = email.replace('@utdallas.edu', '')
+  const { email, role } = body;
 
   if ( !email ) {
     throw createError({ statusCode: 400, statusMessage: 'Name and email are required' });
@@ -26,7 +24,6 @@ export default defineEventHandler(async (event) => {
 
   const newUser = await prisma.user.create({
     data: {
-      name: cleanEmail,
       email,
       role: role || 'STUDENT',
     }
