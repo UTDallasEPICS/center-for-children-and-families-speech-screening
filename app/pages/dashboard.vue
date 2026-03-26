@@ -81,13 +81,13 @@
             </thead>
             <!--Delete once we have users/accounts-->
             <tbody>
-              <tr v-for="user in test" :key="user.id">
+              <tr v-for="user in users" :key="user.id">
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.role }}</td>
                 <td>{{ checkTimeLeft(user) }} days</td>
                 <td>
-                  <button class="btn-danger">Delete</button>
+                  <button class="btn-danger" @click="deleteUser(user.id)">Delete</button>
                 </td>
               </tr>
             </tbody>
@@ -104,9 +104,23 @@
 
 <script setup>
   import { ref } from 'vue'
-  import addUsersModal from '~/components/addUsersModal.vue'
   import { date } from 'zod'
+  const users = ref(null)
 
+  try {
+    const { data } = await useFetch('/api/users', {
+      method: 'GET',
+
+      onFetchError({ error }) {
+        throw error
+      },
+    })
+    users.value = data.value
+  } catch (err) {
+    console.error('Failed to fetch users', err)
+    alert('Failed to fetch users' + err.message)
+  }
+  
   const showModal = ref(false)
   const netIds = ref('')
   const users = ref(null)
@@ -115,31 +129,34 @@
     console.log(ids)
   }
 
-  const test = [
-    {
-      name: 'Samuel Ma',
-      email: 'samuelma@gmail.com',
-      role: 'Admin',
-      createdAt: new Date(2026, 1, 26, 12, 0, 0, 0),
-      expiresAt: new Date(2026, 2, 26, 12, 0, 0, 0),
-    },
-    {
-      name: 'Cody Bui',
-      email: 'codybui@gmail.com',
-      role: 'Researcher',
-      createdAt: new Date(2026, 1, 26, 12, 0, 0, 0),
-      expiresAt: new Date(2026, 3, 26, 12, 0, 0, 0),
-    },
-  ]
 
   //Checks how many days are left until the user expires.
   const checkTimeLeft = (user) => {
-    const expiresDate = new Date(user.expiresAt)
+    const creationDate = new Date(user.createdAt)
+    const expiresDate = new Date(creationDate)
+    expiresDate.setMonth(expiresDate.getMonth() + 6)
     const timeLeft = expiresDate.getTime() - Date.now()
     const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
     return Math.floor(daysTimeLeft)
   }
 
+  async function deleteUser(id) {
+    try {
+      const { data } = await useFetch(`/api/users/${id}`, {
+        method: 'DELETE',
+        immediate: true,
+        watch: false,
+        onFetchError({ error }) {
+          throw error
+        },
+      })
 
+      users.value = users.value.filter((user) => user.id !== id)
+      console.log('Delete successful:', data.value)
+    } catch (err) {
+      console.error('Delete failed:' + err.message)
+      alert('Delete failed')
+    }
+  }
 </script>
 
