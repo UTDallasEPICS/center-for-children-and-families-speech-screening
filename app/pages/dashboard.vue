@@ -60,19 +60,19 @@
           <table class="users-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>netID</th>
+                <th>Email</th>
                 <th>Role</th>
                 <th>Expiration Date</th>
+                <th>Time Remaining</th>
                 <th style="width: 100px">Actions</th>
               </tr>
             </thead>
             <!--Delete once we have users/accounts-->
             <tbody>
               <tr v-for="user in test" :key="user.id">
-                <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.role }}</td>
+                <td>{{ getDateExpire(user) }}</td>
                 <td>{{ checkTimeLeft(user) }} days</td>
                 <td>
                   <button class="btn-danger">Delete</button>
@@ -109,6 +109,19 @@
       expiresAt: new Date(2026, 3, 26, 12, 0, 0, 0),
     },
   ]
+
+  //Get date of experation
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  const getDateExpire = (user) => {
+    const expiresDate = new Date(user.expiresAt)
+    const formatedString = new Intl.DateTimeFormat("en-US").format(expiresDate)
+    return formatedString
+  }
 
   //Checks how many days are left until the user expires.
   const checkTimeLeft = (user) => {
