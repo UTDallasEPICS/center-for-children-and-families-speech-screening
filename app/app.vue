@@ -17,14 +17,8 @@
     const user = session.value?.user
     if (user) {
       return {
-        name: user.name || user.email,
-        initials:
-          user.name
-            ?.split(' ')
-            .map((n: string) => n[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase() || '?',
+        email: user.email,
+        icon: '?', 
         role: (user as any).role || 'User',
       }
     }
@@ -60,10 +54,10 @@
             <div class="flex items-center gap-2">
 
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-main-blue">
-                <span class="text-sm font-semibold text-white">{{ displayUser.initials }}</span>
+                <span class="text-sm font-semibold text-white">{{ displayUser.icon }}</span>
               </div>
               <div class="text-right">
-                <p class="font-mediumg text-sm text-gray-700">{{ displayUser.name }}</p>
+                <p class="font-mediumg text-sm text-gray-700">{{ displayUser.email }}</p>
                 <p class="text-[10px] font-semibold tracking-wider text-confirmation-green uppercase">
                   {{ displayUser.role }}
                 </p>
