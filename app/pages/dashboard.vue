@@ -1,4 +1,3 @@
-
 <template>
   <div class="layout">
     <aside class="sidebar">
@@ -47,26 +46,22 @@
     <div class="users-page">
       <!-- Page Header -->
       <header class="page-header">
-        <h1>Manage Users</h1> 
+        <h1>Manage Users</h1>
 
         <!--<p>{{ new Date(now).toLocaleTimeString() }}</p>-->
       </header>
 
       <section class="content">
-        
-
         <!-- Users List Card -->
         <div class="userlist">
-          
-          <div class = "flex items-center justify-between">
+          <div class="flex items-center justify-between">
             <h2 class="userlist-title">Current Users</h2>
-            <button  @click ="showModal = true" class="btn-primary">Add Users</button>
-            <addUsersModal 
-              v-model:showModal = "showModal"
+            <button @click="showModal = true" class="btn-primary">Add Users</button>
+            <addUsersModal
+              v-model:showModal="showModal"
               v-model:netIds="netIds"
-              @submit = "handleSubmit"
+              @submit="handleSubmit"
             />
-
           </div>
 
           <table class="users-table">
@@ -120,14 +115,13 @@
     console.error('Failed to fetch users', err)
     alert('Failed to fetch users' + err.message)
   }
-  
+
   const showModal = ref(false)
   const netIds = ref('')
 
   const handleSubmit = (ids) => {
     console.log(ids)
   }
-
 
   //Checks how many days are left until the user expires.
   const checkTimeLeft = (user) => {
@@ -158,4 +152,3 @@
     }
   }
 </script>
-

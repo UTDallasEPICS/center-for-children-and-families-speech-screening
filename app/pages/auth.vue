@@ -82,7 +82,7 @@
                 v-model="state.otp"
                 :length="6"
                 size="xl"
-                class="w-full flex-center-center"
+                class="flex-center-center w-full"
                 :ui="{ base: 'bg-white text-black' }"
               />
             </div>
@@ -91,7 +91,7 @@
             <div class="flex-center-center">
               <UButton
                 type="submit"
-                class="flex-center-center w-32 bg-main-blue text-white hover:bg-main-blue/80"
+                class="flex-center-center bg-main-blue hover:bg-main-blue/80 w-32 text-white"
               >
                 {{ isEmailSent ? 'Login' : 'Send OTP' }}
               </UButton>
