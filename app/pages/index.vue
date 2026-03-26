@@ -1,43 +1,39 @@
 <template>
   <div>
     <!-- STEP INDICATOR (Might delete or modify heavily later based on how we want the results page to be)-->
-    <div class="bg-white border-b border-gray-100">
-      <div class="max-w-7xl mx-auto px-6 py-4">
-        <div class="flex items-center justify-center">
-          <!-- loop through steps-->
-          <template v-for="(step, i) in steps" :key="step">
-            <!-- pill styling -->
-            <div
-              class="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200"
-              :class="currentStep === i
-                ? 'bg-[#0077C0] text-white'
-                : currentStep > i
-                  ? 'bg-[#8DC63F]/10 text-[#8DC63F]'
-                  : 'bg-gray-100 text-gray-400'"
-            >
-              <div
-                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200"
-                :class="currentStep === i
-                  ? 'bg-white/20'
-                  : currentStep > i
-                    ? 'bg-[#8DC63F]/20'
-                    : 'bg-gray-200'"
-              >
-              <!-- check or num -->
-                <template v-if="currentStep > i">&#x2713;</template>
-                <template v-else>{{ i + 1 }}</template>
-              </div>
-              <span class="text-sm font-semibold">{{ step }}</span>
-            </div>
-            <!-- connector styling -->
-            <div
-              v-if="i < steps.length - 1"
-              class="w-12 h-0.5 transition-colors duration-200"
-              :class="currentStep > i ? 'bg-[#8DC63F]' : 'bg-gray-200'"
-            />
-          </template>
+    <div class="py-4 header-border flex-center-center">
+      <!-- loop through steps-->
+      <template v-for="(step, i) in steps" :key="step">
+        <!-- pill styling -->
+        <div
+          class="flex-center-center transition-ease gap-2 px-4 py-2 rounded-full"
+          :class="currentStep === i
+            ? 'bg-main-blue text-white'
+            : currentStep > i
+              ? 'bg-confirmation-green/10 text-confirmation-green'
+              : 'bg-gray-100 text-gray-400'"
+        >
+          <div
+            class="flex-center-center transition-ease w-6 h-6 rounded-full text-xs font-bold"
+            :class="currentStep === i
+              ? 'bg-white/20'
+              : currentStep > i
+                ? 'bg-confirmation-green/20'
+                : 'bg-gray-200'"
+          >
+          <!-- check or num -->
+            <template v-if="currentStep > i">&#x2713;</template>
+            <template v-else>{{ i + 1 }}</template>
+          </div>
+          <span class="text-sm font-semibold">{{ step }}</span>
         </div>
-      </div>
+        <!-- connector styling -->
+        <div
+          v-if="i < steps.length - 1"
+          class="w-12 h-0.5 transition-colors duration-200"
+          :class="currentStep > i ? 'bg-confirmation-green' : 'bg-gray-200'"
+        />
+      </template>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -47,7 +43,7 @@
       <div 
         class="flex items-center gap-3 mb-8"
         v-if="currentStep < 2"
-       >
+        >
         <label class="text-sm font-medium text-gray-500">Form Type:</label>
         <!-- Update form selection-->
         <USelect
@@ -72,7 +68,7 @@
           @click="fileInput?.click()"
         >
           <!-- handle selected file with custom handle and hide default -->
-          <input ref="fileInput" type="file" accept=".csv,.xlsx" class="hidden" @change="handleFileSelect" />
+          <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleFileSelect" />
           <div class="flex flex-col items-center gap-4">
             <!-- drag over styling for the rounded square in the middle -->
             <div
@@ -82,8 +78,8 @@
               <UIcon name="i-heroicons-arrow-up-tray" class="text-[#0077C0] text-3xl" />
             </div>
             <div>
-              <p class="text-lg font-semibold text-gray-700">Drag & drop your file here</p>
-              <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv and .xlsx files</p>
+              <p class="text-lg font-semibold text-gray-700">Drag & drop your CSV file here</p>
+              <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv files only</p>
             </div>
             <!--Open file. need .stop to make sure it only opens once due to our custom file input handler-->
             <UButton
@@ -96,21 +92,21 @@
         </div>
         <div class="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
           <UIcon name="i-heroicons-information-circle" />
-          <span>Select a form type above before uploading &mdash; .csv and .xlsx files accepted</span>
+          <span>Select a form type above before uploading</span>
         </div>
       </div>
 
       <!-- PREVIEW -->
       <div v-if="currentStep === 1">
-        <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between mb-6">
+        <div class="white-background-border flex-center-JusBetween p-4 mb-6">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <UIcon name="i-heroicons-check-circle" class="text-[#8DC63F] text-xl" />
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex-center-center">
+              <UIcon name="i-heroicons-check-circle" class="text-confirmation-green text-xl" />
             </div>
             <!--file info-->
             <div>
               <p class="text-sm font-semibold text-gray-700">{{ fileName }}</p>
-              <p class="text-xs text-gray-400">{{ fileSize }} &middot; {{ rows.length }} records found &middot; Validated &#x2713;</p>
+              <p class="footnote-text">{{ fileSize }} &middot; {{ rows.length }} records found &middot; Validated &#x2713;</p>
             </div>
           </div>
           <!--show badge based on warning-->
@@ -174,7 +170,7 @@
               >
                 &larr; Back
               </UButton>
-              <!-- calls calculate endpoint -->
+              <!-- Enabled for now not actually calculating -> CHANGE LATER!!!!!!!!-->
               <UButton
                 class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
                 @click ="calculateData"
@@ -197,7 +193,7 @@
         </div>
       </div>
 
-      <!-- CALCULATING — calls /api/mcdi/calculate and waits for response -->
+      <!-- CALCULATING (CURRENTLY JUST FAKE LOADING SCREEN) -->
       <div v-if="currentStep === 2">
         <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center mb-6">
           <p v-if="!dataCalcFin" class="text-xl font-semibold text-gray-700">Calculating - Please wait</p>
@@ -205,29 +201,23 @@
         </div>
 
         <!-- Bottom outline with Back/Forward buttons -->
-        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div class="border-t border-gray-200 px-4 py-3 flex items-center justify-end bg-gray-50 gap-3">
+        <div class="white-background-border overflow-hidden">
+          <div class="bottom-header flex items-center justify-end gap-3">
             <!-- sends user back to first page -->
-            <UButton variant="outline"
-                      color="neutral"
-                      class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
-                      @click="reset">
+            <UButton class="back-button" @click="reset">
               &larr; Back
             </UButton>
 
             <!-- progress forward button (when data is ready to present) -->
-            <UButton variant="outline"
-                      class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
-                      :disabled="!dataCalcFin"
-                      @click="displayData">
+            <UButton class="forward-button" :disabled="!dataCalcFin" @click="displayData">
               <p v-if="dataCalcFin" class="text-gray-700">View data &rarr;</p>
               <p v-if="!dataCalcFin" class="text-gray-700">Please Wait</p>
             </UButton>
           </div>
         </div>
       </div>
-    
-      <!-- SHOW CALCULATED DATA — displays results with working checkboxes and download buttons -->
+
+      <!-- SHOW CALCULATED DATA (CURRENTLY JUST LISTS DATA AGAIN NO CALC RN)-->
       <div v-if="currentStep === 3">
         <div class="bg-white border border-gray-200 rounded-xl text-center justify-center p-3 mb-3">
           <p class="text-gray-700 text-3xl">Results</p>
@@ -238,46 +228,32 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-gray-50 border-b border-gray-200">
-                  <!-- select all checkbox — toggles all rows -->
+                  <!-- first column of checkboxes-->
                   <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     <p class="flex text-center">
                       Select <br /> all
-                      <input type="checkbox"
-                             :checked="selectedRows.size === rows.length"
-                             style="margin-inline:10px"
-                             @change="selectedRows = selectedRows.size === rows.length ? new Set() : new Set(rows.map((_, i) => i))" />
+                      <!-- CHECK BOXES NOT FUNCTIONAL YET -->
+                      <input type="checkbox" checked style="margin-inline:10px" />
                     </p>
                   </th>
-
                   <!-- gets cols-->
-                  <th v-for="col in columns"
-                      :key="col"
-                      class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th v-for="col in columns" :key="col" class="table-header-text">
                     {{ col }}
                   </th>
                 </tr>
               </thead>
-
               <!--gets rows -->
               <tbody class="divide-y divide-gray-100">
-
-                <tr v-for="(row, i) in rows"
-                    :key="i"
+                <tr v-for="(row, i) in rows" :key="i"
                     class="transition-colors duration-150"
                     :class="hasWarning(row) ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50'">
                   <td>
-                    <!-- per-row checkbox — toggles individual selection -->
+                    <!-- check boxes for each row (NOT FUNCTIONAL YET) -->
                     <div style="position:relative; left:35%">
-                      <input type="checkbox"
-                             :checked="selectedRows.has(i)"
-                             style="width: 15px; height: 15px"
-                             @change="selectedRows.has(i) ? selectedRows.delete(i) : selectedRows.add(i)" />
+                      <input type="checkbox" checked style="width: 15px; height: 15px" />
                     </div>
                   </td>
-
-                  <td v-for="col in columns"
-                      :key="col"
-                      class="px-4 py-3 whitespace-nowrap">
+                  <td v-for="col in columns" :key="col" class="px-4 py-3 whitespace-nowrap">
                     <span v-if="row[col]" class="text-gray-700">{{ row[col] }}</span>
                     <span v-else class="text-gray-300 italic text-xs">empty</span>
                   </td>
@@ -287,36 +263,29 @@
           </div>
 
           <!--bottom row-->
-          <div class="bg-white rounded-xl border border-gray-200">
-            <div class="border-t border-gray-200 px-4 py-3 flex bg-gray-50">
-              <div class="">
-                <UButton variant="outline"
-                         color="neutral"
-                         class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
-                         @click="reset">
-                  &larr; Back home
-                </UButton>
-              </div>
-
-              <!-- download buttons — call generate endpoints -->
-              <div class="flex items-center gap-20 mx-auto">
-                <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="generateReports">
-                  Download Selected Word Documents
-                </UButton>
-
-                <UButton @click="generateExcel">
-                  Download Data Excel
-                </UButton>
-              </div>
+          <div class="white-background-border bottom-header flex-center-JusBetween">
+            <UButton class="back-button" @click="reset">
+              &larr; Back home
+            </UButton>
+            <!-- download buttons for word/excel -->
+            <div class="flex items-center gap-20 mx-auto">
+              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="generateReports">
+                Download Selected Word Documents
+              </UButton>
+              <UButton @click="generateExcel">
+                Download Data Excel
+              </UButton>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import './assets/css/main.css'
 
 //MCDI form
 const selectedForm = ref('')
