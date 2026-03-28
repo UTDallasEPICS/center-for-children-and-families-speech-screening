@@ -14,11 +14,12 @@ enum UserRole{
 
 model User {
   id            String    @id @default(uuid())
+  name          String
   email         String
   emailVerified Boolean   @default(false)
   createdAt     DateTime  @default(now())
-  expiresAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  expiresAt     DateTime?  
+  updatedAt     DateTime?  
   role          UserRole  @default(STUDENT)
   sessions      Session[]
   accounts      Account[]

@@ -1,103 +1,29 @@
-
 <template>
   <div class="layout">
-    <aside class="sidebar">
-      <div class="sidebar-header">Dashboard</div>
-
-      <nav class="nav">
-        <NuxtLink to="/" class="nav-button">
-          <span class="icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="white"
-              stroke-width="1.8"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m4-8v8m5-12l2 2m-2-2v12m-2 0h-4m-4 0H5"
-              />
-            </svg>
-          </span>
-          <span>Home</span>
-        </NuxtLink>
-
-        <NuxtLink to="/dashboard" class="nav-button">
-          <span class="icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="white"
-              stroke-width="1.8"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M17 20h5v-2a4 4 0 00-5-4m-5 6h5m-5 0H7m5 0v-2a4 4 0 00-5-4m10-6a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          </span>
-          <span>Users</span>
-        </NuxtLink>
-      </nav>
-    </aside>
+    <Sidebar />
     <div class="users-page">
       <!-- Page Header -->
       <header class="page-header">
-        <h1>Manage Users</h1> 
-
-        <!--<p>{{ new Date(now).toLocaleTimeString() }}</p>-->
+        <h1>Manage Users</h1>
       </header>
 
       <section class="content">
-        
-
         <!-- Users List Card -->
         <div class="userlist">
-          
-          <div class = "flex items-center justify-between">
+          <div class="flex items-center justify-between">
             <h2 class="userlist-title">Current Users</h2>
-            <button  @click ="showModal = true" class="btn-primary">Add Users</button>
-            <addUsersModal 
-              v-model:showModal = "showModal"
+            <button @click="showModal = true" class="btn-primary">Add Users</button>
+            <addUsersModal
+              v-model:showModal="showModal"
               v-model:netIds="netIds"
-              @submit = "handleSubmit"
+              @submit="handleSubmit"
             />
-
           </div>
-
-          <table class="users-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Expiration Date</th>
-                <th>Time Remaining</th>
-                <th style="width: 100px">Actions</th>
-              </tr>
-            </thead>
-            <!--Delete once we have users/accounts-->
-            <tbody>
-              <tr v-for="user in users" :key="user.id">
-                <td>{{ user.email }}</td>
-                <td>{{ user.role }}</td>
-                <td>{{ getDateExpire(user) }}</td>
-                <td>{{ checkTimeLeft(user) }} days</td>
-                <td>
-                  <button class="btn-danger" @click="deleteUser(user.id)">Delete</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <UsersTable :users="users" @delete="deleteUser" />
         </div>
       </section>
     </div>
   </div>
-
-  <!--Modal setup-->
 </template>
 
 <style src="../assets/css/main.css"></style>
@@ -106,6 +32,13 @@
   import { ref } from 'vue'
   import { date } from 'zod'
   const users = ref(null)
+
+  await useFetch('/api/users/autodelete', {
+    method: 'POST',
+    onFetchError({ error }) {
+      console.error('Autodelete failed:', error)
+    },
+  })
 
   try {
     const { data } = await useFetch('/api/users', {
@@ -120,36 +53,12 @@
     console.error('Failed to fetch users', err)
     alert('Failed to fetch users' + err.message)
   }
-  
+
   const showModal = ref(false)
   const netIds = ref('')
 
   const handleSubmit = (ids) => {
     console.log(ids)
-  }
-
-
-  //Get date of experation
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  const getDateExpire = (user) => {
-    const expiresDate = new Date(user.expiresAt)
-    const formatedString = new Intl.DateTimeFormat("en-US").format(expiresDate)
-    return formatedString
-  }
-
-  //Checks how many days are left until the user expires.
-  const checkTimeLeft = (user) => {
-    const creationDate = new Date(user.createdAt)
-    const expiresDate = new Date(creationDate)
-    expiresDate.setMonth(expiresDate.getMonth() + 6)
-    const timeLeft = expiresDate.getTime() - Date.now()
-    const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
-    return Math.floor(daysTimeLeft)
   }
 
   async function deleteUser(id) {
@@ -171,4 +80,3 @@
     }
   }
 </script>
-

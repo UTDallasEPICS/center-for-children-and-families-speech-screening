@@ -27,6 +27,20 @@
 
   async function handleSubmit(event: FormSubmitEvent<any>) {
     if (!isEmailSent.value) {
+      const res = await $fetch<{ exists: boolean }>('/api/users/check-user', {
+        method: 'POST',
+        body: { email: state.email },
+      })
+
+      if (!res.exists) {
+        toast.add({
+          title: 'Error',
+          description: 'User not found',
+          color: 'error',
+        })
+        return
+      }
+
       const { data, error } = await authClient.emailOtp.sendVerificationOtp({
         email: state.email,
         type: 'sign-in',
@@ -82,7 +96,7 @@
                 v-model="state.otp"
                 :length="6"
                 size="xl"
-                class="w-full flex-center-center"
+                class="flex-center-center w-full"
                 :ui="{ base: 'bg-white text-black' }"
               />
             </div>
@@ -91,7 +105,7 @@
             <div class="flex-center-center">
               <UButton
                 type="submit"
-                class="flex-center-center w-32 bg-main-blue text-white hover:bg-main-blue/80"
+                class="flex-center-center bg-main-blue hover:bg-main-blue/80 w-32 text-white"
               >
                 {{ isEmailSent ? 'Login' : 'Send OTP' }}
               </UButton>
