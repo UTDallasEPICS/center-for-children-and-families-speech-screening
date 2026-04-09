@@ -27,26 +27,15 @@
 
   async function handleSubmit(event: FormSubmitEvent<any>) {
     if (!isEmailSent.value) {
-      const res = await $fetch<{ exists: boolean }>('/api/users/check-user', {
-        method: 'POST',
-        body: { email: state.email },
-      })
-
-      if (!res.exists) {
-        toast.add({
-          title: 'Error',
-          description: 'User not found',
-          color: 'error',
-        })
-        return
-      }
-
       const { data, error } = await authClient.emailOtp.sendVerificationOtp({
         email: state.email,
         type: 'sign-in',
       })
 
       if (error) {
+        if (error.message == '' || error.message == undefined) {
+          error.message = 'Could not sign in, please try again'
+        }
         toast.add({ title: 'Error', description: error.message, color: 'error' })
       } else {
         isEmailSent.value = true

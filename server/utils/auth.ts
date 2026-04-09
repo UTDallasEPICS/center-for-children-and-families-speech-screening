@@ -17,7 +17,18 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'sqlite',
   }),
-
+  hooks: {
+    before: async (requestCtx) => {
+      if (requestCtx.path.endsWith('/email-otp/send-verification-otp')) {
+        const { email } = requestCtx.body
+        const existingUser = await prisma.user.findUnique({ where: { email } })
+        if (!existingUser) {
+          throw new Error('User with this email does not exist')
+        }
+      }
+      return requestCtx
+    },
+  },
   // 1. Lowercase 'user'
   // 2. Sitting OUTSIDE the database block
   user: {
@@ -34,12 +45,6 @@ export const auth = betterAuth({
     emailOTP({
       disableSignUp: true,
       async sendVerificationOTP({ email, otp, type }) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-        })
-        if (!existingUser) {
-          throw new Error('User not found')
-        }
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
           to: email,
