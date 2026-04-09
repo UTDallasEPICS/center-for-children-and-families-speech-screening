@@ -1,9 +1,9 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "./prisma"
-import { emailOTP } from "better-auth/plugins/email-otp"
-import nodemailer from "nodemailer"
-import { UserRole } from "@prisma/client";
+import { betterAuth } from 'better-auth'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { prisma } from './prisma'
+import { emailOTP } from 'better-auth/plugins/email-otp'
+import nodemailer from 'nodemailer'
+import { UserRole } from '@prisma/client'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -14,32 +14,44 @@ const transporter = nodemailer.createTransport({
 })
 
 export const auth = betterAuth({
-    database: prismaAdapter(prisma, {
-        provider: "sqlite",
-    }),
-
-    // 1. Lowercase 'user'
-    // 2. Sitting OUTSIDE the database block
-    user: { 
-        additionalFields: {
-            role: {
-                type: "string", // 3. This must literally just say "string"
-                required: false,
-                defaultValue: "STUDENT"
-            }
+  database: prismaAdapter(prisma, {
+    provider: 'sqlite',
+  }),
+  hooks: {
+    before: async (requestCtx) => {
+      if (requestCtx.path.endsWith('/email-otp/send-verification-otp')) {
+        const { email } = requestCtx.body
+        const existingUser = await prisma.user.findUnique({ where: { email } })
+        if (!existingUser) {
+          throw new Error('User with this email does not exist')
         }
+      }
+      return requestCtx
     },
-    
-    plugins: [
-        emailOTP({
-			async sendVerificationOTP({ email, otp, type }) {
-				await transporter.sendMail({
-					from: process.env.EMAIL_USER,
-					to: email,
-					subject: "OTP",
-					html: `${otp}`,
-				})
-			}
-		})
-	]
-});
+  },
+  // 1. Lowercase 'user'
+  // 2. Sitting OUTSIDE the database block
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string', // 3. This must literally just say "string"
+        required: false,
+        defaultValue: 'STUDENT',
+      },
+    },
+  },
+
+  plugins: [
+    emailOTP({
+      disableSignUp: true,
+      async sendVerificationOTP({ email, otp, type }) {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'OTP',
+          html: `${otp}`,
+        })
+      },
+    }),
+  ],
+})
