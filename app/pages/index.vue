@@ -114,8 +114,11 @@
             <UBadge v-if="selectedForm" color="info" variant="subtle">
               {{ formTypes.find(f => f.value === selectedForm)?.label || selectedForm }}
             </UBadge>
-            <UBadge v-if="warningCount > 0" color="warning" variant="subtle">
-              &#x26A0; {{ warningCount }} warning{{ warningCount > 1 ? 's' : '' }}
+            <UBadge v-if="validationResult === true" color="success" variant="subtle">
+              &#x2713; Valid Structure
+            </UBadge>
+            <UBadge v-else color="error" variant="subtle">
+              &#x26A0; Form Mismatch
             </UBadge>
           </div>
         </div>
@@ -140,8 +143,7 @@
                 <tr
                   v-for="(row, i) in rows.slice(0, 10)"
                   :key="i"
-                  class="transition-colors duration-150"
-                  :class="hasWarning(row) ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50'"
+                  class="transition-colors duration-150 hover:bg-gray-50"
                 >
                   <td
                     v-for="col in columns"
@@ -173,6 +175,7 @@
               <!-- Enabled for now not actually calculating -> CHANGE LATER!!!!!!!!-->
               <UButton
                 class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
+                :disabled="validationResult !== true"
                 @click ="calculateData"
               >
                 Calculate Percentiles &rarr;
@@ -181,15 +184,15 @@
           </div>
         </div>
 
-        <!-- if warnings exist show error panel-->
-        <div v-if="warningCount > 0" class="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+        <!-- if validation errors exist show error panel-->
+        <div v-if="validationResult !== true" class="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
           <div class="flex items-center gap-2 mb-2">
-            <UIcon name="i-heroicons-exclamation-triangle" class="text-yellow-600" />
-            <span class="text-sm font-semibold text-yellow-800">{{ warningCount }} Warning{{ warningCount > 1 ? 's' : '' }}</span>
+            <UIcon name="i-heroicons-exclamation-triangle" class="text-red-600 text-lg" />
+            <span class="text-sm font-semibold text-red-800">Form Mismatch</span>
           </div>
-          <ul class="text-xs text-yellow-700 space-y-1 ml-6">
-            <li v-for="w in warnings" :key="w">&bull; {{ w }}</li>
-          </ul>
+          <p class="text-sm text-red-700 ml-7">
+            The uploaded file does not comply with the selected form type. It appears to have the <strong>{{ (validationResult as string[]).join(' and ') }}</strong> for this form.
+          </p>
         </div>
       </div>
 
@@ -245,8 +248,7 @@
               <!--gets rows -->
               <tbody class="divide-y divide-gray-100">
                 <tr v-for="(row, i) in rows" :key="i"
-                    class="transition-colors duration-150"
-                    :class="hasWarning(row) ? 'bg-yellow-50/40 hover:bg-yellow-50/70' : 'hover:bg-gray-50'">
+                    class="transition-colors duration-150 hover:bg-gray-50">
                   <td>
                     <!-- check boxes for each row (NOT FUNCTIONAL YET) -->
                     <div style="position:relative; left:35%">
@@ -285,7 +287,10 @@
 </template>
 
 <script setup lang="ts">
+import { validateFormData } from '~/utils/form-validation'
 import './assets/css/main.css'
+
+const toast = useToast()
 
 //MCDI form
 const selectedForm = ref('')
@@ -337,6 +342,15 @@ function handleFileSelect(e: Event) {
 
 //Processes file — converts xlsx to csv if needed, then parses for preview
 function processFile(file: File) {
+  if (!selectedForm.value) {
+    toast.add({
+      title: 'No form type selected',
+      description: 'Please select a form type before uploading your CSV/Excel file.',
+      color: 'error'
+    })
+    return
+  }
+
   fileName.value = file.name
   //maybe add error handling for filesize? Accidentally putting large files breaks application
   fileSize.value = file.size < 1024 ? file.size + ' B' : (file.size / 1024).toFixed(1) + ' KB'
@@ -388,14 +402,17 @@ function parseCSVText(text: string, skipSecondRow: boolean) {
   //grab info and trim
   const lines = text.trim().split('\n')
   //no headers!
-  if (lines.length < 2) return
+  if (lines.length < 2) {
+    toast.add({ title: 'Empty File', description: 'The uploaded file does not contain enough data.', color: 'error' })
+    return
+  }
   //get and split column and row info for each
   const headerLine = lines[0]
   if (!headerLine) return
   columns.value = headerLine.split(',').map(h => h.trim())
   //skip row 2 if xlsx (the "for percentile calculation" label row in the Excel input template)
   const dataLines = skipSecondRow ? lines.slice(2) : lines.slice(1)
-  rows.value = dataLines.map(line => {
+  const parsedRows = dataLines.map(line => {
     const values = line.split(',')
     //object for keeping track of all rows
     const row: Record<string, string> = {}
@@ -403,14 +420,18 @@ function parseCSVText(text: string, skipSecondRow: boolean) {
     return row
   }).filter(row => Object.values(row).some(v => v !== '')) //filter out rows with absolutely nothing
 
+  rows.value = parsedRows
   //update wizard
   currentStep.value = 1
 }
 
-//decide if row should be warned about in displayed dataset 
-function hasWarning(row: Record<string, string>) {
-  return columns.value.some(col => !row[col])
-}
+// compute validation dynamically so changing the dropdown re-evaluates
+const validationResult = computed(() => {
+  if (!selectedForm.value || rows.value.length === 0) return true
+  return validateFormData(selectedForm.value, rows.value)
+})
+
+
 
 //calls the calculate endpoint, stores processed data in outputRows
 async function calculateData() {
@@ -493,24 +514,7 @@ async function generateExcel() {
   }
 }
 
-//runs when rows or columns change
-const warnings = computed(() => {
-  //collect warning strings
-  const w: string[] = []
-  //loop through to determine what's missing
-  rows.value.forEach((row, i) => {
-    const firstCol = columns.value[0]
-    const id = firstCol ? row[firstCol] : `Row ${i + 1}`
-    columns.value.forEach(col => {
-      if (!row[col]) w.push(`Record ${id}: Missing ${col}`)
-    })
-  })
-  //only return 10
-  return w.slice(0, 10)
-})
 
-//Call to warnings.value.length more nicely :)
-const warningCount = computed(() => warnings.value.length)
 
 function reset() {
   currentStep.value = 0
