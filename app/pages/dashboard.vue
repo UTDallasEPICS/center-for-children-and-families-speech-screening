@@ -72,19 +72,19 @@
           <table class="users-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>netID</th>
+                <th>Email</th>
                 <th>Role</th>
                 <th>Expiration Date</th>
+                <th>Time Remaining</th>
                 <th style="width: 100px">Actions</th>
               </tr>
             </thead>
             <!--Delete once we have users/accounts-->
             <tbody>
               <tr v-for="user in users" :key="user.id">
-                <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.role }}</td>
+                <td>{{ getDateExpire(user) }}</td>
                 <td>{{ checkTimeLeft(user) }} days</td>
                 <td>
                   <button class="btn-danger" @click="deleteUser(user.id)">Delete</button>
@@ -124,10 +124,70 @@
   const showModal = ref(false)
   const netIds = ref('')
 
-  const handleSubmit = (ids) => {
-    console.log(ids)
+
+  const handleSubmit = async (ids) => {
+    const {validIds, invalidIds} = validateNetIdInput(ids)
+
+    if (invalidIds.length){
+      alert(`These ids are invalid: " ${invalidIds.join(", ")}`)
+      return
+    }
+
+    try {
+      const results = await Promise.all(
+        validIds.map(id => 
+        fetch("/api/users", {
+          method:"POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({email:`${id}@utdallas.edu`,
+            role: "STUDENT"
+          })
+        }
+
+        ))
+      )
+    
+      console.log("Users created: ", results)
+    }
+    catch (err){
+      console.error("Error:", err)
+    }
+    
+
+  }
+  
+  const validateNetIdInput = (ids)=>{
+    const splitIds = ids.trim().split(/[\s,]+/)
+    const validIds = []
+    const invalidIds = []
+
+    const netIdRegex = /^[a-zA-Z]{3}\d{6}$/
+
+    splitIds.forEach(id => {
+      if (netIdRegex.test(id)) {
+        validIds.push(id)
+      } else {
+        invalidIds.push(id)
+      }
+    })
+    return {validIds, invalidIds}
   }
 
+
+  //Get date of experation
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  const getDateExpire = (user) => {
+    const expiresDate = new Date(user.expiresAt)
+    const formatedString = new Intl.DateTimeFormat("en-US").format(expiresDate)
+    return formatedString
+  }
 
   //Checks how many days are left until the user expires.
   const checkTimeLeft = (user) => {
