@@ -4,10 +4,12 @@ import { prisma } from '../server/utils/prisma'
 async function main() {
 	console.log('Start seeding...')
 
-	const user1 = await prisma.user.create({
-		data: {
-			id: 'user_03',
-			email: 'amy210001@gmail.com'
+	const user1 = await prisma.user.upsert({
+		where: {email: 'amy210001@gmail.com'},
+		update: {},
+		create: {
+			email: 'amy210001@gmail.com',
+			role: 'ADMIN'
 		}
 	})
 
