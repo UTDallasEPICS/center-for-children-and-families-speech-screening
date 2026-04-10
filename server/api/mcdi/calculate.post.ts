@@ -14,10 +14,13 @@ const PERCENTILE_ROWS = [99, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35,
 
 // Interpolates a score against a percentile table — returns '<5', 99, or a rounded integer
 function lookupPercentile(table: PercentileTable, age: number, score: number): PercentileResult {
+  if (isNaN(age) || age <= 0) return '<5'  
+  if (isNaN(score) || score <= 0) return '<5'
   const rows = PERCENTILE_ROWS.map(pct => ({ pct, threshold: table[pct]?.[age] ?? 0 }))
 
   if (score >= rows[0].threshold) return 99
   if (score < rows[rows.length - 1].threshold) return '<5'
+ 
 
   for (let i = 0; i < rows.length - 1; i++) {
     const higher = rows[i]
@@ -27,7 +30,7 @@ function lookupPercentile(table: PercentileTable, age: number, score: number): P
       const interpolated =
         ((score - lower.threshold) / (higher.threshold - lower.threshold)) *
         (higher.pct - lower.pct) + lower.pct
-      return Math.round(interpolated)
+      return Math.round(interpolated * 100) / 100
     }
   }
 
