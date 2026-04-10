@@ -36,6 +36,28 @@
 
   defineEmits(['delete'])
 
+  //Get date of experation
+  const options = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }
+  const getDateExpire = (user) => {
+    const expiresDate = new Date(user.expiresAt)
+    const formatedString = new Intl.DateTimeFormat('en-US').format(expiresDate)
+    return formatedString
+  }
+
+  //Checks how many days are left until the user expires.
+  const checkTimeLeft = (user) => {
+    const creationDate = new Date(user.createdAt)
+    const expiresDate = new Date(creationDate)
+    expiresDate.setMonth(expiresDate.getMonth() + 6)
+    const timeLeft = expiresDate.getTime() - Date.now()
+    const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
+    return Math.floor(daysTimeLeft)
+  }
   function formatExpire(date) {
     return new Intl.DateTimeFormat('en-US').format(new Date(date))
   }

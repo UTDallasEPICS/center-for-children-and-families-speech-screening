@@ -57,8 +57,48 @@
   const showModal = ref(false)
   const netIds = ref('')
 
-  const handleSubmit = (ids) => {
-    console.log(ids)
+  const handleSubmit = async (ids) => {
+    const { validIds, invalidIds } = validateNetIdInput(ids)
+
+    if (invalidIds.length) {
+      alert(`These ids are invalid: " ${invalidIds.join(', ')}`)
+      return
+    }
+
+    try {
+      const results = await Promise.all(
+        validIds.map((id) =>
+          fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: `${id}@utdallas.edu`, role: 'STUDENT' }),
+          })
+        )
+      )
+
+      console.log('Users created: ', results)
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const validateNetIdInput = (ids) => {
+    const splitIds = ids.trim().split(/[\s,]+/)
+    const validIds = []
+    const invalidIds = []
+
+    const netIdRegex = /^[a-zA-Z]{3}\d{6}$/
+
+    splitIds.forEach((id) => {
+      if (netIdRegex.test(id)) {
+        validIds.push(id)
+      } else {
+        invalidIds.push(id)
+      }
+    })
+    return { validIds, invalidIds }
   }
 
   async function deleteUser(id) {
