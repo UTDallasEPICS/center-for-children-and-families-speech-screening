@@ -21,7 +21,7 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::654654236858:role/githubactions
+          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: us-east-2
 
@@ -32,7 +32,7 @@ jobs:
       - name: Build and Push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ccf-aass
+          REPOSITORY: ${{ vars.REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
           DATABASE_URL: 'file:./dev.db'
         run: |
