@@ -12,7 +12,7 @@
         <div class="userlist">
           <div class="flex items-center justify-between">
             <h2 class="userlist-title">Current Users</h2>
-            <button @click="showModal = true" class="btn-primary">Add Users</button>
+            <ccfbutton variant="btn-primary" @action="showModal = true"> Add Users </ccfbutton>
             <addUsersModal
               v-model:showModal="showModal"
               v-model:netIds="netIds"
@@ -99,24 +99,5 @@
       }
     })
     return { validIds, invalidIds }
-  }
-
-  async function deleteUser(id) {
-    try {
-      const { data } = await useFetch(`/api/users/${id}`, {
-        method: 'DELETE',
-        immediate: true,
-        watch: false,
-        onFetchError({ error }) {
-          throw error
-        },
-      })
-
-      users.value = users.value.filter((user) => user.id !== id)
-      console.log('Delete successful:', data.value)
-    } catch (err) {
-      console.error('Delete failed:' + err.message)
-      alert('Delete failed')
-    }
   }
 </script>

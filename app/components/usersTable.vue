@@ -17,7 +17,14 @@
         <td>{{ formatExpire(user.expiresAt) }}</td>
         <td>{{ daysLeft(user.expiresAt) }} days</td>
         <td>
-          <DeleteButton :id="user.id" @confirm="$emit('delete', user.id)" />
+          <ccfbutton
+            variant="btn-danger"
+            :needsConfirmation="true"
+            confirmationMessage="Are you sure you want to delete this user?"
+            @action="deleteUser(user.id)"
+          >
+            Delete
+          </ccfbutton>
         </td>
       </tr>
     </tbody>
@@ -25,7 +32,7 @@
 </template>
 
 <script setup>
-  import DeleteButton from '~/components/deleteButton.vue'
+  import { defineProps, defineEmits } from 'vue'
 
   const props = defineProps({
     users: {
@@ -34,36 +41,34 @@
     },
   })
 
-  defineEmits(['delete'])
+  const emit = defineEmits(['delete'])
 
-  //Get date of experation
-  const options = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }
-  const getDateExpire = (user) => {
-    const expiresDate = new Date(user.expiresAt)
-    const formatedString = new Intl.DateTimeFormat('en-US').format(expiresDate)
-    return formatedString
-  }
-
-  //Checks how many days are left until the user expires.
-  const checkTimeLeft = (user) => {
-    const creationDate = new Date(user.createdAt)
-    const expiresDate = new Date(creationDate)
-    expiresDate.setMonth(expiresDate.getMonth() + 6)
-    const timeLeft = expiresDate.getTime() - Date.now()
-    const daysTimeLeft = timeLeft / (1000 * 60 * 60 * 24)
-    return Math.floor(daysTimeLeft)
-  }
+  // Helper: Format Date
   function formatExpire(date) {
+    if (!date) return 'N/A'
     return new Intl.DateTimeFormat('en-US').format(new Date(date))
   }
 
+  // Helper: Calculate Days
   function daysLeft(date) {
+    if (!date) return 0
     const diff = new Date(date).getTime() - Date.now()
-    return Math.floor(diff / (1000 * 60 * 60 * 24))
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
+  }
+
+  // The Delete Function
+  async function deleteUser(id) {
+    try {
+      await $fetch(`/api/users/${id}`, {
+        method: 'DELETE',
+      })
+
+      emit('delete', id)
+
+      console.log('Delete successful')
+    } catch (err) {
+      console.error('Delete failed:', err)
+      alert('Delete failed')
+    }
   }
 </script>
