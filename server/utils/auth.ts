@@ -4,6 +4,7 @@ import { prisma } from './prisma'
 import { emailOTP } from 'better-auth/plugins/email-otp'
 import nodemailer from 'nodemailer'
 import { UserRole } from '@prisma/client'
+import { toDisplayString } from 'vue'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -23,7 +24,7 @@ export const auth = betterAuth({
         const { email } = requestCtx.body
         const existingUser = await prisma.user.findUnique({ where: { email } })
         if (!existingUser) {
-          throw new Error('User with this email does not exist')
+          throw new Error('Could not sign in, please try again')
         }
       }
       return requestCtx
