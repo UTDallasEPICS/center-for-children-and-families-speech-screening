@@ -31,6 +31,6 @@
       const confirmed = confirm(props.confirmationMessage)
       if (!confirmed) return
     }
-    emit('action', props.id)
+    emit('action')
   }
 </script>
