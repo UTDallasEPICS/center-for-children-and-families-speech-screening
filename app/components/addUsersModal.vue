@@ -27,9 +27,11 @@
     emit('update:showModal', false)
   }
 
-  const updateNetIds = (e) => {
+  //What does it do??? I forgot
+  /*const updateNetIds = (e) => {
     emit('update:netIds', e.target.value)
   }
+    */
 
   const submit = () => {
     emit('submit', props.netIds)

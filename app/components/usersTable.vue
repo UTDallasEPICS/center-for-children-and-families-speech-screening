@@ -17,14 +17,10 @@
         <td>{{ formatExpire(user.expiresAt) }}</td>
         <td>{{ daysLeft(user.expiresAt) }} days</td>
         <td>
-          <ccfbutton
-            variant="btn-danger"
-            :needsConfirmation="true"
-            confirmationMessage="Are you sure you want to delete this user?"
-            @action="deleteUser(user.id)"
-          >
-            Delete
-          </ccfbutton>
+            <div class = "flex items-center gap-2">
+              <Ccfbutton variant = "btn-primary" @action="editUser(user.id)" :needsConfirmation = "true" confirmationMessage="Are you sure you want to change this users role?">Edit</Ccfbutton>
+              <ccfbutton variant="btn-danger" :needsConfirmation="true" confirmationMessage="Are you sure you want to delete this user?"@action="deleteUser(user.id)">Delete</ccfbutton>
+            </div>
         </td>
       </tr>
     </tbody>
@@ -41,7 +37,7 @@
     },
   })
 
-  const emit = defineEmits(['delete'])
+  const emit = defineEmits(['delete', 'edit'])
 
   // Helper: Format Date
   function formatExpire(date) {
@@ -71,4 +67,9 @@
       alert('Delete failed')
     }
   }
+
+  //Edit User Function
+  async function editUser(id) {
+    emit('edit', id)
+}
 </script>

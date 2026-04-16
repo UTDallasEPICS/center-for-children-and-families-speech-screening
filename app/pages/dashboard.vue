@@ -19,8 +19,8 @@
               @submit="handleSubmit"
             />
           </div>
-          <UsersTable :users="users" @delete="deleteUser" />
-        </div>
+            <UsersTable :users="users" @delete="deleteUser" @edit="editUser"/> 
+       </div>
       </section>
     </div>
   </div>
@@ -31,7 +31,10 @@
 <script setup>
   import { ref } from 'vue'
   import { date } from 'zod'
+  import Ccfbutton from '~/components/ccfbutton.vue'
   const users = ref(null)
+
+  const toast = useToast()
 
   await useFetch('/api/users/autodelete', {
     method: 'POST',
@@ -99,5 +102,35 @@
       }
     })
     return { validIds, invalidIds }
+  }
+
+  const editUser = async (id) => {
+    try {
+      const user = users.value.find(u => u.id === id)
+      if (!user){ 
+        return
+      }
+
+      const newRole = user.role === "ADMIN" ? "STUDENT" : "ADMIN"
+      
+      if (user.role === "ADMIN") {
+        const adminCount = users.value.filter(u => u.role === "ADMIN").length
+
+        if (adminCount <= 1) {
+          toast.add({title: 'Error', description: 'Error: At least one admin must be in the database', color: 'red' })
+          return
+        }
+      }
+
+      const updatedUser = await $fetch(`/api/users/${id}`, {
+        method: "PUT",
+        body: { role: newRole }
+      })
+
+      users.value = users.value.map(u => u.id === id ? updatedUser : u)
+
+    } catch (err) {
+      toast.add({title: 'Error', description: 'Role update failed', color: 'red'})
+      }
   }
 </script>
