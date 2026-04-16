@@ -19,7 +19,7 @@
               @submit="handleSubmit"
             />
           </div>
-          <UsersTable :users="users" @delete="deleteUser" />
+          <UsersTable :users="users" />
         </div>
       </section>
     </div>
@@ -79,6 +79,8 @@
       )
 
       console.log('Users created: ', results)
+      const newUsers = await Promise.all(results.map((res) => res.json()))
+      users.value.push(...newUsers)
     } catch (err) {
       console.error('Error:', err)
     }

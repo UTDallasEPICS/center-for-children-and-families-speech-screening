@@ -40,6 +40,7 @@
       required: true,
     },
   })
+  const users = ref(props.users)
 
   const emit = defineEmits(['delete'])
 
@@ -64,8 +65,8 @@
       })
 
       emit('delete', id)
-
       console.log('Delete successful')
+      users.value = users.value.filter((user) => user.id !== id)
     } catch (err) {
       console.error('Delete failed:', err)
       alert('Delete failed')
