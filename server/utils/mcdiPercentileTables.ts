@@ -6,6 +6,9 @@
 //   B.2/B.3 = WU 8-18mo (girls/boys)    B.5/B.6 = WP 8-18mo (girls/boys)
 //   B.8/B.9 = WP 16-30mo (girls/boys)
 
+/*
+
+*/
 export type PercentileTable = Record<number, Record<number, number>>;
 
 // Appendix A — Long Form norms
