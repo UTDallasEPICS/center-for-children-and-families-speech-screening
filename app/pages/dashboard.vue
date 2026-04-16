@@ -61,31 +61,37 @@
     const { validIds, invalidIds } = validateNetIdInput(ids)
 
     if (invalidIds.length) {
-      alert(`These ids are invalid: " ${invalidIds.join(', ')}`)
+      alert(`These ids are invalid: ${invalidIds.join(', ')}`)
       return
     }
 
     try {
       const results = await Promise.all(
-        validIds.map((id) =>
-          fetch('/api/users', {
+        validIds.map(async (id) => {
+          const res = await fetch('/api/users', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: `${id}@utdallas.edu`, role: 'STUDENT' }),
           })
-        )
+
+          if (res.ok) return { status: 'success', data: await res.json() }
+          if (res.status === 409) return { status: 'exists', id: id }
+          return { status: 'failed', id: id }
+        })
       )
 
-      console.log('Users created: ', results)
-      const newUsers = await Promise.all(results.map((res) => res.json()))
-      users.value.push(...newUsers)
+      const successfulUsers = results.filter((r) => r.status === 'success').map((r) => r.data)
+      users.value.push(...successfulUsers)
+
+      const duplicates = results.filter((r) => r.status === 'exists').map((r) => r.id)
+
+      if (duplicates.length) {
+        alert(`These ids already exist: ${duplicates.join(', ')}`)
+      }
     } catch (err) {
-      console.error('Error:', err)
+      console.error('Unexpected Error:', err)
     }
   }
-
   const validateNetIdInput = (ids) => {
     const splitIds = ids.trim().split(/[\s,]+/)
     const validIds = []
