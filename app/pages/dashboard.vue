@@ -19,7 +19,7 @@
               @submit="handleSubmit"
             />
           </div>
-          <UsersTable :users="users" />
+          <UsersTable :users="users" @delete="deleteUser" />
         </div>
       </section>
     </div>
@@ -101,5 +101,18 @@
       }
     })
     return { validIds, invalidIds }
+  }
+  async function deleteUser(id) {
+    try {
+      await $fetch(`/api/users/${id}`, {
+        method: 'DELETE',
+      })
+
+      console.log('Delete successful')
+      users.value = users.value.filter((user) => user.id !== id)
+    } catch (err) {
+      console.error('Delete failed:', err)
+      alert('Delete failed')
+    }
   }
 </script>
