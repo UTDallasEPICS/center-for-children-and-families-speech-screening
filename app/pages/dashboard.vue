@@ -79,6 +79,8 @@
       )
 
       console.log('Users created: ', results)
+      const newUsers = await Promise.all(results.map((res) => res.json()))
+      users.value.push(...newUsers)
     } catch (err) {
       console.error('Error:', err)
     }
@@ -99,5 +101,18 @@
       }
     })
     return { validIds, invalidIds }
+  }
+  async function deleteUser(id) {
+    try {
+      await $fetch(`/api/users/${id}`, {
+        method: 'DELETE',
+      })
+
+      console.log('Delete successful')
+      users.value = users.value.filter((user) => user.id !== id)
+    } catch (err) {
+      console.error('Delete failed:', err)
+      alert('Delete failed')
+    }
   }
 </script>

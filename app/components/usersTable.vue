@@ -21,7 +21,7 @@
             variant="btn-danger"
             :needsConfirmation="true"
             confirmationMessage="Are you sure you want to delete this user?"
-            @action="deleteUser(user.id)"
+            @action="emit('delete', user.id)"
           >
             Delete
           </ccfbutton>
@@ -54,21 +54,5 @@
     if (!date) return 0
     const diff = new Date(date).getTime() - Date.now()
     return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
-  }
-
-  // The Delete Function
-  async function deleteUser(id) {
-    try {
-      await $fetch(`/api/users/${id}`, {
-        method: 'DELETE',
-      })
-
-      emit('delete', id)
-
-      console.log('Delete successful')
-    } catch (err) {
-      console.error('Delete failed:', err)
-      alert('Delete failed')
-    }
   }
 </script>

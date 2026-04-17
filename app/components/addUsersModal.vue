@@ -26,7 +26,6 @@
   const close = () => {
     emit('update:showModal', false)
   }
-
   const updateNetIds = (e) => {
     emit('update:netIds', e.target.value)
   }
