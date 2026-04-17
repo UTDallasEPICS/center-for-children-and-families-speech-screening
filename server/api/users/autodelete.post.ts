@@ -6,9 +6,7 @@ export default defineEventHandler(async () => {
       expiresAt: {
         lt: new Date(),
       },
-      role: {
-        not: 'ADMIN',
-      },
+      role: 'STUDENT',
     },
   })
 
