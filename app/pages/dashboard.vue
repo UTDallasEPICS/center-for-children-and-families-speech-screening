@@ -68,6 +68,7 @@
     try {
       const results = await Promise.all(
         validIds.map(async (id) => {
+          id = id.toLowerCase()
           const res = await fetch('/api/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
