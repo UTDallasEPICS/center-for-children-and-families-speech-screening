@@ -28,6 +28,10 @@
     await authClient.signOut()
     await navigateTo('/auth')
   }
+
+  //user manual setup
+  const showManual = ref(false);
+
 </script>
 
 <template>
@@ -45,11 +49,29 @@
             </div>
           </div>
 
+          <!-- website manuel -->
+          <p style="color:dodgerblue; cursor:pointer; text-decoration: underline"
+             @click="showManual = true">
+            User Manual
+          </p>
+          <userManualModal
+            v-model:showManual="showManual"
+            size="lg"
+          />
+
           <!-- Need to be valid user and it needs to be on index -->
-          <div
-            v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
-            class="flex items-center gap-4"
-          >
+          <div v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
+               class="flex items-center gap-4">
+
+            <!-- Admin dashboard button -->
+            <UButton icon="i-heroicons-user-group"
+                     variant="soft"
+                     color="info"
+                     v-if="displayUser.role == 'ADMIN'"
+                     @click="useRouter().push(route.path === '/dashboard' ? '/' : '/dashboard')">
+              {{route.path === '/dashboard' ? "Home" : "Admin Dashboard"}}
+            </UButton>
+
             <div class="flex items-center gap-2">
               <div class="text-right">
                 <p class="font-mediumg text-sm text-gray-700">{{ displayUser.email }}</p>
@@ -58,12 +80,7 @@
                 </p>
               </div>
             </div>
-            <UButton
-              icon="i-heroicons-cog-6-tooth"
-              variant="ghost"
-              color="neutral"
-              @click="navigateTo('/dashboard')"
-            />
+
             <!-- handles sign out logic -->
             <UButton variant="link" color="neutral" size="sm" @click="signOut">Sign Out</UButton>
           </div>
