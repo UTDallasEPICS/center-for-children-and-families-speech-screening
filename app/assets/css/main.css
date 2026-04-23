@@ -3,19 +3,18 @@
 
 @theme {
   --color-main-green: #40e191;
-  --color-main-blue: #0077C0;
+  --color-main-blue: #0077c0;
   --color-off-main-blue: #005a94;
-  --color-off-white: #F9FAFB;
+  --color-off-white: #f9fafb;
   --color-light-gray: #eeeeee;
   --color-off-black: #0f172b;
-  --color-confirmation-green: #8DC63F;
+  --color-confirmation-green: #8dc63f;
 }
-
 
 /*default frames*/
 .flex-center-center {
-  display:flex;
-  flex-direction:row;
+  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 }
@@ -64,7 +63,6 @@
   padding: 4rem;
   text-align: center;
   cursor: pointer;
-
 }
 
 .transition-ease {
@@ -80,16 +78,15 @@ button {
   transition-timing-function: ease;
 }
 button:active {
-  scale: .95;
+  scale: 0.95;
 }
-
 
 /*default back buttons*/
 button.back-button {
   border-width: 1px;
   border-color: black;
   background-color: var(--color-off-black);
-  color:white;
+  color: white;
 }
 button.back-button:hover {
   background-color: #5c5c5c;
@@ -105,7 +102,6 @@ button.forward-button {
 button.forward-button:hover {
   background-color: #95eec2;
 }
-
 
 /*text defaults*/
 .footnote-text {
@@ -134,7 +130,7 @@ button.forward-button:hover {
 
 .sidebar {
   width: 220px;
-  height: 100vh;
+  height: auto;
   background: #4b7dbb;
   padding: 24px 18px;
   display: flex;
@@ -283,7 +279,6 @@ button.forward-button:hover {
   font-weight: 600;
 }
 
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -304,7 +299,7 @@ button.forward-button:hover {
   padding: 2rem;
   border-radius: 12px;
   width: 350px;
-  color:#333;
+  color: #333;
 }
 
 .modal-input {
@@ -312,7 +307,7 @@ button.forward-button:hover {
   padding: 8px;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  color: rgba(84, 106, 127, 0.562)
+  color: rgba(84, 106, 127, 0.562);
 }
 
 .modal-actions {
