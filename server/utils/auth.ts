@@ -18,6 +18,24 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'sqlite',
   }),
+  rateLimit: {
+    window: 60,
+    max: 100,
+    customRules: {
+      '/email-otp/send-verification-otp': {
+        window: 60,
+        max: 3,
+      },
+      '/email-otp/verify-email': {
+        window: 60,
+        max: 5,
+      },
+      '/sign-in/email-otp': {
+        window: 60,
+        max: 5,
+      },
+    },
+  },
   hooks: {
     before: async (requestCtx) => {
       if (requestCtx.path.endsWith('/email-otp/send-verification-otp')) {
@@ -45,6 +63,8 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       disableSignUp: true,
+      expiresIn: 300,
+      allowedAttempts: 3,
       async sendVerificationOTP({ email, otp, type }) {
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
