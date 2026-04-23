@@ -14,7 +14,7 @@ function normalizeGender(val: string): string {
   return val
 }
 
-type PercentileResult = number | '<5'
+type PercentileResult = number | '<5' | '>99'
 type StatusResult = 'At Risk' | 'Typical'
 
 // Bracket data returned alongside the percentile for Excel output
@@ -46,7 +46,7 @@ function lookupPercentile(table: PercentileTable, age: number, score: number): L
   // Score at or above 99th percentile row
   if (score >= rows[0].threshold) {
     return {
-      percentile: 99,
+      percentile: '>99',
       bracket: { lowerWords: rows[0].threshold, higherWords: rows[0].threshold, lowerPct: 99, higherPct: 99 },
     }
   }
@@ -94,6 +94,7 @@ function lookupPercentile(table: PercentileTable, age: number, score: number): L
 
 function getStatus(pct: PercentileResult): StatusResult {
   if (pct === '<5') return 'At Risk'
+  if (pct === '>99') return 'Typical'
   if (typeof pct === 'number' && pct <= 20) return 'At Risk'
   return 'Typical'
 }
@@ -173,10 +174,17 @@ export default defineEventHandler(async (event) => {
   console.log('[calculate] Form type:', formType)
   console.log('[calculate] Rows received:', rows?.length)
 
+  // Filter out empty rows — skips any row where both name fields are blank
+  const cleanedRows = (rows as Record<string, any>[]).filter(row =>
+    (row.chname_reg?.toString().trim() || row.chlname_reg?.toString().trim())
+  )
+
+  console.log('[calculate] Rows after empty filter:', cleanedRows.length)
+
   let outputRows: Record<string, any>[] = []
 
   if (formType === 'engSF_8_18') {
-    outputRows = rows.map((row: Record<string, any>) => {
+    outputRows = cleanedRows.map((row: Record<string, any>) => {
       const age     = parseInt(row.age_mcdi)
       const gender  = normalizeGender(row.chgender_reg ?? '')
       const wuScore = parseFloat(row.total_receptive_eng_mon)  || 0
@@ -203,7 +211,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'engSF_16_30') {
-    outputRows = rows.map((row: Record<string, any>) => {
+    outputRows = cleanedRows.map((row: Record<string, any>) => {
       const age     = parseInt(row.age_mcdi)
       const gender  = normalizeGender(row.chgender_reg ?? '')
       const wpScore = parseFloat(row.es2_english_total_mon) || 0
@@ -228,7 +236,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'SE_8_18') {
-    outputRows = rows.map((row: Record<string, any>) => {
+    outputRows = cleanedRows.map((row: Record<string, any>) => {
       const age     = parseInt(row.age_mcdi)
       const gender  = normalizeGender(row.chgender_reg ?? '')
       const wuScore = parseFloat(row.total_receptive)  || 0
@@ -259,7 +267,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'SE_16_30') {
-    outputRows = rows.map((row: Record<string, any>) => {
+    outputRows = cleanedRows.map((row: Record<string, any>) => {
       const age     = parseInt(row.age_mcdi)
       const gender  = normalizeGender(row.chgender_reg ?? '')
       const wpScore = parseFloat(row.total_span_eng_expressive) || 0
@@ -286,7 +294,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'ME_8_18') {
-    outputRows = rows.map((row: Record<string, any>) => {
+    outputRows = cleanedRows.map((row: Record<string, any>) => {
       const age     = parseInt(row.age_mcdi)
       const gender  = normalizeGender(row.chgender_reg ?? '')
       const totalWU = (parseFloat(row.total_receptive_eng_fa66b7)  || 0) + (parseFloat(row.total_receptive_zh)  || 0)
@@ -317,7 +325,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'ME_16_30') {
-    outputRows = rows.map((row: Record<string, any>) => {
+    outputRows = cleanedRows.map((row: Record<string, any>) => {
       const age     = parseInt(row.age_mcdi)
       const gender  = normalizeGender(row.chgender_reg ?? '')
       const totalWP = (parseFloat(row.total_expressive_eng_77b77e) || 0) + (parseFloat(row.total_expressive_zh) || 0)
@@ -344,7 +352,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'engOther_8_18') {
-    outputRows = rows.map((row: Record<string, any>) => ({
+    outputRows = cleanedRows.map((row: Record<string, any>) => ({
       child_id:     '',
       chname_reg:   row.chname_reg   ?? '',
       chlname_reg:  row.chlname_reg  ?? '',
@@ -365,7 +373,7 @@ export default defineEventHandler(async (event) => {
   }
 
   else if (formType === 'engOther_16_30') {
-    outputRows = rows.map((row: Record<string, any>) => ({
+    outputRows = cleanedRows.map((row: Record<string, any>) => ({
       child_id:     '',
       chname_reg:   row.chname_reg   ?? '',
       chlname_reg:  row.chlname_reg  ?? '',
