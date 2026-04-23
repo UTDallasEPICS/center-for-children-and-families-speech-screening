@@ -60,7 +60,27 @@
 </script>
 <style scoped>
   .table-scroll-component {
-    max-height: 75vh;
+    max-height: 70vh;
     overflow-y: auto;
+  }
+  .users-table {
+    width: 100%;
+    border-collapse: separate; /* Changed from collapse to fix border issues */
+    border-spacing: 0;
+  }
+  .users-table th {
+    position: sticky;
+    top: 0; /* Pins it to the top of .table-scroll-component */
+    background-color: white; /* Matches your screenshot background */
+    z-index: 10; /* Keeps it above the data rows */
+    text-align: left;
+    font-weight: 600;
+    padding: 0.8rem;
+    border-bottom: 2px solid #333; /* Slightly thicker for the header look */
+  }
+
+  .users-table td {
+    padding: 0.8rem;
+    border-bottom: 1px solid #333;
   }
 </style>
