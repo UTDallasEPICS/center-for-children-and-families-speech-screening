@@ -241,20 +241,20 @@ button.forward-button:hover {
 
 /* Buttons */
 .btn-primary {
-  background: #4f8cff;
+  background: #0077c0;
   padding: 0.6rem 1rem;
   border-radius: 6px;
   border: none;
-  color: black;
+  color: white;
   cursor: pointer;
 }
 
 .btn-danger {
-  background: #ff4f4f;
+  background: #fa0536;
   padding: 0.4rem 0.7rem;
   border-radius: 6px;
   border: none;
-  color: black;
+  color: white;
   cursor: pointer;
 }
 

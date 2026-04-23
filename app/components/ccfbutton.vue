@@ -1,7 +1,7 @@
 <template>
-  <button :class="variant" @click="handleClick">
+  <UButton :class="variant" @click="handleClick">
     <slot>Submit</slot>
-  </button>
+  </UButton>
 </template>
 
 <script setup>
