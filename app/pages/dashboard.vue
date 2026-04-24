@@ -1,18 +1,19 @@
 <template>
-  <div class="layout">
-    <Sidebar />
+  <div class="flex w-full flex-col">
     <div class="users-page">
-      <!-- Page Header -->
-      <header class="page-header">
-        <h1>Manage Users</h1>
-      </header>
-
       <section class="content">
-        <!-- Users List Card -->
-        <div class="userlist">
-          <div class="flex items-center justify-between">
-            <h2 class="userlist-title">Current Users</h2>
+        <header class="grid grid-cols-3 items-center px-4 py-3">
+          <div></div>
+
+          <h1 class="text-center text-2xl font-bold">Manage Users</h1>
+
+          <div class="flex justify-end px-4">
             <ccfbutton variant="btn-primary" @action="showModal = true"> Add Users </ccfbutton>
+          </div>
+        </header>
+
+        <div class="userlist">
+          <div class="mb-4">
             <addUsersModal
               v-model:showModal="showModal"
               v-model:netIds="netIds"

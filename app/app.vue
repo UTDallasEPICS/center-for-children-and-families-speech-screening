@@ -2,7 +2,6 @@
   import { authClient } from './utils/auth-client'
   import { computed, watch } from 'vue'
 
-
   //Auth Setup
   const sessionResult = authClient.useSession()
   const session = computed(() => sessionResult.value?.data ?? null)
@@ -39,7 +38,7 @@
           <div class="flex items-center gap-2">
             <img src="/ccf-logo.png" alt="Center for Children and Families" class="h-12" />
             <div class="border-l border-gray-200 pl-2">
-              <p class="text-xs leading-tight font-semibold text-main-blue">
+              <p class="text-main-blue text-xs leading-tight font-semibold">
                 MCDI Percentile Calculator
               </p>
             </div>
@@ -53,7 +52,9 @@
             <div class="flex items-center gap-2">
               <div class="text-right">
                 <p class="font-mediumg text-sm text-gray-700">{{ displayUser.email }}</p>
-                <p class="text-[10px] font-semibold tracking-wider text-confirmation-green uppercase">
+                <p
+                  class="text-confirmation-green text-[10px] font-semibold tracking-wider uppercase"
+                >
                   {{ displayUser.role }}
                 </p>
               </div>
@@ -71,17 +72,16 @@
       </header>
 
       <!-- PAGE CONTENT -->
-      <main class="flex-1">
+      <main class="">
         <NuxtPage />
       </main>
 
       <!-- FOOTER -->
       <footer class="mt-auto border-t border-gray-200 bg-white">
-        <div class="mx-auto max-w-[90rem] flex-center-JusBetween px-6 py-6">
+        <div class="flex-center-JusBetween mx-auto max-w-[90rem] px-6 py-6">
           <div class="footnote-text">
             &copy; 2026 Center for Children and Families &middot; University of Texas at Dallas
           </div>
-
         </div>
       </footer>
     </div>
