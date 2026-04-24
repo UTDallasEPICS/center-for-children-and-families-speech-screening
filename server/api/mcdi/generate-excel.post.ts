@@ -13,65 +13,86 @@ const FORM_TYPE_TO_TAB: Record<string, string> = {
   engOther_16_30:'engOther16-30',
 }
 
-// Output column order per form type — child_id is always first so researchers can backfill it
+// Output column order per form type — matches Jingyi's updated output Excel exactly
 const FORM_COLUMNS: Record<string, string[]> = {
   engSF_8_18: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'total_receptive_eng_mon', 'total_expressive_eng_mon',
-    'WU_Precentile', 'WP_Percentile', 'WU_Status', 'WP_Status',
+    'WU_Precentile', 'WU_Status',
+    'WU: Lower End Percentile Words', 'WU: Higher End Percentile Words',
+    'WU: Lower End Percentile', 'WU: Higher End Percentile',
+    'WP_Percentile', 'WP_Status',
+    'WP: Lower End Percentile Words', 'WP: Higher End Percentile Words',
+    'WP: Lower End Percentile', 'WP: Higher End Percentile',
     'mcdi_english_short_form_818_months_timestamp',
   ],
   engSF_16_30: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'es2_english_total_mon',
     'WP_Percentile', 'WP_Status',
+    'WP: Lower End Percentile Words', 'WP: Higher End Percentile Words',
+    'WP: Lower End Percentile', 'WP: Higher End Percentile',
     'mcdi_english_short_form_1630_months_timestamp',
   ],
   SE_8_18: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'total_receptive_eng', 'total_expressive_eng',
     'total_receptive_span', 'total_expressive_span',
     'total_receptive', 'total_expressive',
-    'WU_Precentile', 'WP_Percentile', 'WU_Status', 'WP_Status',
+    'WU_Precentile', 'WU_Status',
+    'comb WU: Lower End Percentile Words', 'comb WU: Higher End Percentile Words',
+    'comb WU: Lower End Percentile', 'comb WU: Higher End Percentile',
+    'WP_Percentile', 'WP_Status',
+    'comb WP: Lower End Percentile Words', 'comb WP: Higher End Percentile Words',
+    'comb WP: Lower End Percentile', 'comb WP: Higher End Percentile',
     'mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp',
   ],
   SE_16_30: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'es2_english_total', 'es2_spanish_total', 'total_span_eng_expressive',
     'WP_Percentile', 'WP_Status',
+    'comb WP: Lower End Percentile Words', 'comb WP: Higher End Percentile Words',
+    'comb WP: Lower End Percentile', 'comb WP: Higher End Percentile',
     'mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp',
   ],
   ME_8_18: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'total_receptive_eng_fa66b7', 'total_expressive_eng_77b77e',
     'total_receptive_zh', 'total_expressive_zh',
     'total_receptive=total_receptive_eng_fa66b7+total_receptive_zh',
     'total_expressive=total_expressive_eng_77b77e+total_expressive_zh',
-    'WU_Precentile', 'WP_Percentile', 'WU_Status', 'WP_Status',
+    'WU_Precentile', 'WU_Status',
+    'combined WU: Lower End Percentile Words', 'combined WU: Higher End Percentile Words',
+    'combined WU: Lower End Percentile', 'combined WU: Higher End Percentile',
+    'WP_Percentile', 'WP_Status',
+    'combined WP: Lower End Percentile Words', 'combined WP: Higher End Percentile Words',
+    'combined WP: Lower End Percentile', 'combined WP: Higher End Percentile',
     'mcdimandarin_timestamp',
   ],
   ME_16_30: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'total_expressive_eng_77b77e', 'total_expressive_zh',
     'total_expressive=total_expressive_eng_77b77e+total_expressive_zh',
     'WP_Percentile', 'WP_Status',
+    'comb WP: Lower End Percentile Words', 'comb WP: Higher End Percentile Words',
+    'comb WP: Lower End Percentile', 'comb WP: Higher End Percentile',
     'mcdimandarin_timestamp',
   ],
   engOther_8_18: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'specify_language', 'total_receptive_eng_mon', 'total_expressive_eng_mon',
     'mcdi_english_short_form_818_months_timestamp',
@@ -79,17 +100,33 @@ const FORM_COLUMNS: Record<string, string[]> = {
   ],
   engOther_16_30: [
     'child_id',
-    'chname_reg', 'chlname_reg', 'sem', 'site', 'chdob_reg', 'chgender_reg',
+    'chname_reg', 'chlname_reg', 'sem', 'site_reg', 'chdob_reg', 'chgender_reg',
     'age', 'age_mcdi', 'otherlangexpo', 'language',
     'specify_language', 'total_expressive_eng_mon',
   ],
 }
 
-// The ME combined total columns have big display names but map to simpler row keys
+// Columns whose display name differs from the row key in the output object
 const COLUMN_TO_ROW_KEY: Record<string, string> = {
-  'total_receptive=total_receptive_eng_fa66b7+total_receptive_zh': 'total_receptive',
+  'total_receptive=total_receptive_eng_fa66b7+total_receptive_zh':  'total_receptive',
   'total_expressive=total_expressive_eng_77b77e+total_expressive_zh': 'total_expressive',
 }
+
+// Columns that should be highlighted yellow (the new bracket columns Jingyi requested)
+const YELLOW_COLUMNS = new Set([
+  'WU: Lower End Percentile Words', 'WU: Higher End Percentile Words',
+  'WU: Lower End Percentile', 'WU: Higher End Percentile',
+  'WP: Lower End Percentile Words', 'WP: Higher End Percentile Words',
+  'WP: Lower End Percentile', 'WP: Higher End Percentile',
+  'comb WU: Lower End Percentile Words', 'comb WU: Higher End Percentile Words',
+  'comb WU: Lower End Percentile', 'comb WU: Higher End Percentile',
+  'comb WP: Lower End Percentile Words', 'comb WP: Higher End Percentile Words',
+  'comb WP: Lower End Percentile', 'comb WP: Higher End Percentile',
+  'combined WU: Lower End Percentile Words', 'combined WU: Higher End Percentile Words',
+  'combined WU: Lower End Percentile', 'combined WU: Higher End Percentile',
+  'combined WP: Lower End Percentile Words', 'combined WP: Higher End Percentile Words',
+  'combined WP: Lower End Percentile', 'combined WP: Higher End Percentile',
+])
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -107,13 +144,14 @@ export default defineEventHandler(async (event) => {
   colorSheet.getCell('A1').font = { bold: true }
   const colorKeyRows = [
     'ME= mandarin english; denotes MCDI english form for ME bilinguals',
-    'SE= spanish english ; denotes the MCDI combined SE forms for SE bilinguals',
+    'SE= spanish english; denotes the MCDI combined SE forms for SE bilinguals',
     'engSF = monolingual english form',
     'WU = Words Understood (receptive)',
     'WP = Words Produced (expressive)',
     'At Risk = percentile at or below 20th percentile',
     'Typical = percentile above 20th percentile',
     'child_id = to be backfilled by researcher after download',
+    'Yellow columns = bracket data used to calculate the interpolated percentile',
   ]
   colorKeyRows.forEach((text, i) => { colorSheet.getCell(`A${i + 2}`).value = text })
 
@@ -125,21 +163,28 @@ export default defineEventHandler(async (event) => {
   const dataSheet = workbook.addWorksheet(tabName)
   dataSheet.addRow(columns)
 
-  // Style the header row
+  // Style the header row — yellow fill for bracket columns, grey for everything else
   const headerRow = dataSheet.getRow(1)
-  headerRow.font = { bold: true }
-  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9D9D9' } }
-  headerRow.alignment = { wrapText: true }
-  columns.forEach((_, i) => { dataSheet.getColumn(i + 1).width = 20 })
+  columns.forEach((col, i) => {
+    const cell = headerRow.getCell(i + 1)
+    cell.font = { bold: true }
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: YELLOW_COLUMNS.has(col) ? 'FFFFFF00' : 'FFD9D9D9' },
+    }
+    cell.alignment = { wrapText: true }
+    dataSheet.getColumn(i + 1).width = 20
+  })
 
-  // Write each output row, resolving big ME column names back to their row keys
+  // Write each output row
   outputRows.forEach((row: Record<string, any>) => {
     const rowData = columns.map((col: string) => {
       const rowKey = COLUMN_TO_ROW_KEY[col] ?? col
       const val = row[rowKey]
       return val !== undefined && val !== null ? val : ''
     })
-    dataSheet.addRow(rowData)
+    const dataRow = dataSheet.addRow(rowData)
   })
 
   dataSheet.views = [{ state: 'frozen', ySplit: 1 }]

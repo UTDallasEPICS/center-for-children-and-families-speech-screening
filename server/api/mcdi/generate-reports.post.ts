@@ -2,8 +2,6 @@ import { defineEventHandler, readBody } from 'h3'
 import { join } from 'path'
 import { readFileSync } from 'fs'
 import PizZip from 'pizzip'
-import archiver from 'archiver'
-import { PassThrough } from 'stream'
 
 const TEMPLATES_DIR = join(process.cwd(), 'public', 'templates')
 
@@ -21,6 +19,7 @@ const TEMPLATES: Record<string, { atRisk: string; typical: string } | { single: 
 
 // 8-18mo: at risk if WU or WP <= 20th pct. 16-30mo: WP only
 function isAtRisk(formType: string, row: Record<string, any>): boolean {
+  console.log('[isAtRisk]', row.chname_reg, '| WU:', row.WU_Precentile, '| WP:', row.WP_Percentile)
   if (formType.startsWith('engOther')) return false
 
   const wu = row.WU_Precentile
@@ -187,43 +186,29 @@ export default defineEventHandler(async (event) => {
     return { success: false, message: `Unknown form type: ${formType}` }
   }
 
-  // Build zip in memory, one filled docx per selected row
-  const passThrough = new PassThrough()
-  const archive = archiver('zip', { zlib: { level: 6 } })
-  archive.pipe(passThrough)
+  // Build zip synchronously using PizZip — no streams, no race conditions
+  const outputZip = new PizZip()
 
   for (const idx of selectedIndices) {
     const row = outputRows[idx]
     if (!row) continue
 
-    let templateFile: string
-    if ('single' in templateConfig) {
-      templateFile = templateConfig.single
-    } else {
-      templateFile = isAtRisk(formType, row) ? templateConfig.atRisk : templateConfig.typical
-    }
+    const templateFile = 'single' in templateConfig
+      ? templateConfig.single
+      : isAtRisk(formType, row) ? templateConfig.atRisk : templateConfig.typical
 
     const templatePath = join(TEMPLATES_DIR, templateFile)
     const docBuffer = fillTemplate(templatePath, row, formType)
 
     const firstName = (row.chname_reg ?? 'Unknown').replace(/\s+/g, '_')
     const lastName  = (row.chlname_reg ?? 'Unknown').replace(/\s+/g, '_')
-    archive.append(docBuffer, { name: `${firstName}_${lastName}_${formType}.docx` })
+    outputZip.file(`${firstName}_${lastName}_${formType}.docx`, docBuffer)
   }
 
-  await archive.finalize()
-
-  // Collect zip stream into buffer and return as base64
-  const chunks: Buffer[] = []
-  await new Promise<void>((resolve, reject) => {
-    passThrough.on('data', (chunk) => chunks.push(chunk))
-    passThrough.on('end', resolve)
-    passThrough.on('error', reject)
-  })
-
-  const base64   = Buffer.concat(chunks).toString('base64')
-  const today    = new Date().toISOString().split('T')[0]
-  const fileName = `${formType}_reports_${today}.zip`
+  const zipBuffer = outputZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' })
+  const base64    = zipBuffer.toString('base64')
+  const today     = new Date().toISOString().split('T')[0]
+  const fileName  = `${formType}_reports_${today}.zip`
 
   console.log('[generate-reports] Zip generated:', fileName)
   return { success: true, fileName, base64 }

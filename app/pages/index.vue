@@ -313,14 +313,14 @@ const outputRows = ref<any[]>([])
 const selectedRows = ref<Set<number>>(new Set())
 //dropdown options
 const formTypes = [
-  { label: 'English Short Form 8-18 mo', value: 'engSF_8_18' },
-  { label: 'English Short Form 16-30 mo', value: 'engSF_16_30' },
-  { label: 'SE Short Form 8-18 mo (Spanish-English)', value: 'SE_8_18' },
-  { label: 'SE Short Form 16-30 mo (Spanish-English)', value: 'SE_16_30' },
-  { label: 'ME 8-18 mo (Mandarin-English)', value: 'ME_8_18' },
-  { label: 'ME 16-30 mo (Mandarin-English)', value: 'ME_16_30' },
-  { label: 'English + Other Language 8-18 mo', value: 'engOther_8_18' },
-  { label: 'English + Other Language 16-30 mo', value: 'engOther_16_30' },
+  { label: 'English Only 8-18 mo', value: 'engSF_8_18' },
+  { label: 'English Only 19-30 mo', value: 'engSF_16_30' },
+  { label: 'Spanish-English 8-18 mo', value: 'SE_8_18' },
+  { label: 'Spanish-English 19-30 mo', value: 'SE_16_30' },
+  { label: 'Mandarin-English 8-18 mo', value: 'ME_8_18' },
+  { label: 'Mandarin-English 19-30 mo', value: 'ME_16_30' },
+  { label: 'DNE 8-18 mo', value: 'engOther_8_18' },
+  { label: 'DNE 19-30 mo', value: 'engOther_16_30' },
 ]
 
 //step labels

@@ -1,7 +1,7 @@
 <template>
-  <button class="btn-danger" @click="handleClick">
+  <UButton class="btn-danger" @click="handleClick">
     <slot>Delete</slot>
-  </button>
+  </UButton>
 </template>
 
 <script setup>
