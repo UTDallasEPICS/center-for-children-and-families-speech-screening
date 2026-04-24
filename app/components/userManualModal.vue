@@ -3,9 +3,11 @@
     <div class="modal" style="width:100vh">
       <div class="flex-center-JusBetween">
         <p class="px-6 font-semibold"> User Video Manual </p>
-        <UButton style="background-color:red" class="rounded-xl px-2.5 py-1" @click="close">
-          <icon icon="i-heroicon-x-circle" />
-        </UButton>
+        <UButton icon ="i-heroicons-x-circle"
+                 color="error"
+                 variant="solid"
+                 class="rounded-xl px-1 py-1" 
+                 @click="close"/>
       </div>
 
       <img src="/instructionManualGif.gif" alt="Video explain uploading and navigating webpage" 
