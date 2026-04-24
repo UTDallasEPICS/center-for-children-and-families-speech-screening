@@ -242,11 +242,18 @@ button.forward-button:hover {
 /* Buttons */
 .btn-primary {
   background: #0077c0;
+  border: 1px solid transparent;
+  transition: all 150ms ease-in-out;
   padding: 0.6rem 1rem;
   border-radius: 6px;
-  border: none;
   color: white;
   cursor: pointer;
+}
+.btn-primary:hover {
+  background-color: #005a94;
+}
+.btn-primary:active {
+  transform: scale(0.95);
 }
 
 .btn-danger {
@@ -255,7 +262,14 @@ button.forward-button:hover {
   border-radius: 6px;
   border: none;
   color: white;
+  transition: all 150ms ease-in-out;
   cursor: pointer;
+}
+.btn-danger:hover {
+  background-color: #c4002d;
+}
+.btn-danger:active {
+  transform: scale(0.95);
 }
 
 .modal-overlay {
