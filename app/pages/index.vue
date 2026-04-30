@@ -68,7 +68,7 @@
           @click="fileInput?.click()"
         >
           <!-- handle selected file with custom handle and hide default -->
-          <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleFileSelect" />
+          <input ref="fileInput" type="file" accept=".csv, .xlsx" class="hidden" @change="handleFileSelect" />
           <div class="flex flex-col items-center gap-4">
             <!-- drag over styling for the rounded square in the middle -->
             <div
@@ -78,8 +78,8 @@
               <UIcon name="i-heroicons-arrow-up-tray" class="text-[#0077C0] text-3xl" />
             </div>
             <div>
-              <p class="text-lg font-semibold text-gray-700">Drag & drop your CSV file here</p>
-              <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv files only</p>
+              <p class="text-lg font-semibold text-gray-700">Drag & drop your CSV or Excel file here</p>
+              <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv and .xlsx files</p>
             </div>
             <!--Open file. need .stop to make sure it only opens once due to our custom file input handler-->
             <UButton
@@ -198,9 +198,15 @@
 
       <!-- CALCULATING (CURRENTLY JUST FAKE LOADING SCREEN) -->
       <div v-if="currentStep === 2">
-        <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center mb-6">
-          <p v-if="!dataCalcFin" class="text-xl font-semibold text-gray-700">Calculating - Please wait</p>
-          <p v-if= "dataCalcFin" class="text-xl font-semibold text-gray-700">Finished Calculating</p>
+        <div class="bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center justify-center mb-6">
+          <div v-if="!dataCalcFin" class="flex items-center">
+            <UIcon name="i-heroicons-arrow-path" class="animate-spin text-main-blue text-2xl mr-3" />
+            <p class="text-xl font-semibold text-gray-700">Calculating - Please wait</p>
+          </div>
+          <div v-if="dataCalcFin" class="flex items-center">
+            <UIcon name="i-heroicons-check-circle" class="text-confirmation-green text-2xl mr-3" />
+            <p class="text-xl font-semibold text-gray-700">Finished Calculating</p>
+          </div>
         </div>
 
         <!-- Bottom outline with Back/Forward buttons -->
@@ -271,10 +277,10 @@
             </UButton>
             <!-- download buttons for word/excel -->
             <div class="flex items-center gap-20 mx-auto">
-              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="generateReports">
+              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" :loading="isDownloadingReports" @click="generateReports">
                 Download Selected Word Documents
               </UButton>
-              <UButton @click="generateExcel">
+              <UButton :loading="isDownloadingExcel" @click="generateExcel">
                 Download Data Excel
               </UButton>
             </div>
@@ -311,6 +317,9 @@ const dataCalcFin = ref(false)
 const outputRows = ref<any[]>([])
 //tracks which rows are selected via checkboxes for word doc download
 const selectedRows = ref<Set<number>>(new Set())
+//tracks loading state for downloads
+const isDownloadingReports = ref(false)
+const isDownloadingExcel = ref(false)
 //dropdown options
 const formTypes = [
   { label: 'English Only 8-18 mo', value: 'engSF_8_18' },
@@ -454,6 +463,13 @@ async function calculateData() {
   }
 
   dataCalcFin.value = true
+
+  // Automatically jump to the download results after a short delay
+  setTimeout(() => {
+    if (currentStep.value === 2) {
+      displayData()
+    }
+  }, 600)
 }
 
 //format calculated data for last page
@@ -463,6 +479,7 @@ function displayData() {
 
 //sends selected rows to backend to generate .docx reports as a zip
 async function generateReports() {
+  isDownloadingReports.value = true
   try {
     const response = await $fetch('/api/mcdi/generate-reports', {
       method: 'POST',
@@ -485,11 +502,14 @@ async function generateReports() {
     URL.revokeObjectURL(url)
   } catch (err) {
     console.error('Generate reports failed:', err)
+  } finally {
+    isDownloadingReports.value = false
   }
 }
 
 //sends processed data to backend to generate a .xlsx file
 async function generateExcel() {
+  isDownloadingExcel.value = true
   try {
     const response = await $fetch('/api/mcdi/generate-excel', {
       method: 'POST',
@@ -511,6 +531,8 @@ async function generateExcel() {
     URL.revokeObjectURL(url)
   } catch (err) {
     console.error('Generate excel failed:', err)
+  } finally {
+    isDownloadingExcel.value = false
   }
 }
 
