@@ -119,7 +119,7 @@ function getPositionalValues(formType: string, row: Record<string, any>): string
 }
 
 // Fills a Word template with child data via direct XML string replacements
-function fillTemplate(templatePath: string, row: Record<string, any>, formType: string): Buffer {
+function fillTemplate(templatePath: string, row: Record<string, any>, formType: string, programName: string): Buffer {
   const content = readFileSync(templatePath, 'binary')
   const zip = new PizZip(content)
   let xml = zip.file('word/document.xml')!.asText()
@@ -142,6 +142,9 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
     /(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)ENTER(<\/w:t><\/w:r>)(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)number(<\/w:t><\/w:r>)/g,
     '$3ENTERnumber$4'
   )
+
+  // Replace program name
+  xml = xml.replace(/(<w:t[^>]*>)\[\s*\](<\/w:t>)/g, (_, o, c) => `${o}${programName}${c}`)
 
   // Replace name, gender, age placeholders
   xml = xml.replace(/(<w:t[^>]*>)xx(<\/w:t>)/g,  (_, o, c) => `${o}${fullName}${c}`)
@@ -175,11 +178,12 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { formType, outputRows, selectedIndices } = body
+  const { formType, outputRows, selectedIndices, programName } = body
 
   console.log('[generate-reports] Form type:', formType)
   console.log('[generate-reports] Selected indices:', selectedIndices)
   console.log('[generate-reports] Output rows received:', outputRows?.length)
+  console.log('[generate-reports] Program name: ', programName)
 
   const templateConfig = TEMPLATES[formType]
   if (!templateConfig) {
@@ -198,7 +202,7 @@ export default defineEventHandler(async (event) => {
       : isAtRisk(formType, row) ? templateConfig.atRisk : templateConfig.typical
 
     const templatePath = join(TEMPLATES_DIR, templateFile)
-    const docBuffer = fillTemplate(templatePath, row, formType)
+    const docBuffer = fillTemplate(templatePath, row, formType, programName)
 
     const firstName = (row.chname_reg ?? 'Unknown').replace(/\s+/g, '_')
     const lastName  = (row.chlname_reg ?? 'Unknown').replace(/\s+/g, '_')
