@@ -5,34 +5,36 @@
       <!-- loop through steps-->
       <template v-for="(step, i) in steps" :key="step">
         <!-- pill styling -->
-        <div
-          class="flex-center-center transition-ease gap-2 px-4 py-2 rounded-full"
-          :class="currentStep === i
-            ? 'bg-main-blue text-white'
-            : currentStep > i
-              ? 'bg-confirmation-green/10 text-confirmation-green'
-              : 'bg-gray-100 text-gray-400'"
-        >
-          <div
-            class="flex-center-center transition-ease w-6 h-6 rounded-full text-xs font-bold"
-            :class="currentStep === i
-              ? 'bg-white/20'
-              : currentStep > i
-                ? 'bg-confirmation-green/20'
-                : 'bg-gray-200'"
+        <div class="flex-center-center transition-ease gap-2 px-4 py-2 rounded-full"
+             :class="currentStep === i
+             ? 'bg-main-blue text-white'
+             : currentStep>
+          i
+          ? 'bg-confirmation-green/10 text-confirmation-green'
+          : 'bg-gray-100 text-gray-400'"
           >
-          <!-- check or num -->
-            <template v-if="currentStep > i">&#x2713;</template>
-            <template v-else>{{ i + 1 }}</template>
+          <div class="flex-center-center transition-ease w-6 h-6 rounded-full text-xs font-bold"
+               :class="currentStep === i
+               ? 'bg-white/20'
+               : currentStep>
+            i
+            ? 'bg-confirmation-green/20'
+            : 'bg-gray-200'"
+            >
+            <!-- check or num -->
+            <template v-if="currentStep > i">
+              &#x2713;
+            </template>
+            <template v-else>
+              {{ i + 1 }}
+            </template>
           </div>
           <span class="text-sm font-semibold">{{ step }}</span>
         </div>
         <!-- connector styling -->
-        <div
-          v-if="i < steps.length - 1"
-          class="w-12 h-0.5 transition-colors duration-200"
-          :class="currentStep > i ? 'bg-confirmation-green' : 'bg-gray-200'"
-        />
+        <div v-if="i < steps.length - 1"
+             class="w-12 h-0.5 transition-colors duration-200"
+             :class="currentStep > i ? 'bg-confirmation-green' : 'bg-gray-200'" />
       </template>
     </div>
 
@@ -40,41 +42,33 @@
     <div class="max-w-7xl mx-auto px-6 py-10 w-full">
 
       <!-- FORM TYPE SELECTOR (Change for another time is make this dependent on current step being 0 so it only shows on preview) -->
-      <div 
-        class="flex items-center gap-3 mb-8"
-        v-if="currentStep < 2"
-        >
+      <div class="flex items-center gap-3 mb-8"
+           v-if="currentStep < 2">
         <label class="text-sm font-medium text-gray-500">Form Type:</label>
         <!-- Update form selection-->
-        <USelect
-          v-model="selectedForm"
-          :items="formTypes"
-          placeholder="Select MCDI Form..."
-          class="min-w-[280px]"
-        />
+        <USelect v-model="selectedForm"
+                 :items="formTypes"
+                 placeholder="Select MCDI Form..."
+                 class="min-w-[280px]" />
       </div>
 
       <!-- UPLOAD -->
       <div v-if="currentStep === 0">
         <!--Dropzone style event handlers -->
-        <div
-          class="bg-white rounded-2xl border-2 border-dashed p-16 text-center cursor-pointer transition-all duration-200"
-          :class="dragOver
+        <div class="bg-white rounded-2xl border-2 border-dashed p-16 text-center cursor-pointer transition-all duration-200"
+             :class="dragOver
             ? 'border-[#0077C0] bg-[#0077C0]/[0.02] scale-[1.005]'
             : 'border-gray-300 hover:border-[#0077C0] hover:shadow-md'"
-          @dragover.prevent="dragOver = true"
-          @dragleave="dragOver = false"
-          @drop.prevent="handleDrop"
-          @click="fileInput?.click()"
-        >
+             @dragover.prevent="dragOver = true"
+             @dragleave="dragOver = false"
+             @drop.prevent="handleDrop"
+             @click="fileInput?.click()">
           <!-- handle selected file with custom handle and hide default -->
           <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleFileSelect" />
           <div class="flex flex-col items-center gap-4">
             <!-- drag over styling for the rounded square in the middle -->
-            <div
-              class="w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-200"
-              :class="dragOver ? 'bg-[#0077C0]/10 scale-110' : 'bg-[#0077C0]/5'"
-            >
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-200"
+                 :class="dragOver ? 'bg-[#0077C0]/10 scale-110' : 'bg-[#0077C0]/5'">
               <UIcon name="i-heroicons-arrow-up-tray" class="text-[#0077C0] text-3xl" />
             </div>
             <div>
@@ -82,10 +76,8 @@
               <p class="text-sm text-gray-400 mt-1">or click to browse &mdash; accepts .csv files only</p>
             </div>
             <!--Open file. need .stop to make sure it only opens once due to our custom file input handler-->
-            <UButton
-              class="mt-2 bg-[#0077C0] hover:bg-[#005a94] active:scale-95 transition-all duration-150"
-              @click.stop="fileInput?.click()"
-            >
+            <UButton class="mt-2 bg-[#0077C0] hover:bg-[#005a94] active:scale-95 transition-all duration-150"
+                     @click.stop="fileInput?.click()">
               Browse Files
             </UButton>
           </div>
@@ -129,27 +121,21 @@
               <thead>
                 <tr class="bg-gray-50 border-b border-gray-200">
                   <!-- gets cols-->
-                  <th
-                    v-for="col in columns"
-                    :key="col"
-                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                  >
+                  <th v-for="col in columns"
+                      :key="col"
+                      class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {{ col }}
                   </th>
                 </tr>
               </thead>
               <!--gets rows -->
               <tbody class="divide-y divide-gray-100">
-                <tr
-                  v-for="(row, i) in rows.slice(0, 10)"
-                  :key="i"
-                  class="transition-colors duration-150 hover:bg-gray-50"
-                >
-                  <td
-                    v-for="col in columns"
-                    :key="col"
-                    class="px-4 py-3 whitespace-nowrap"
-                  >
+                <tr v-for="(row, i) in rows.slice(0, 10)"
+                    :key="i"
+                    class="transition-colors duration-150 hover:bg-gray-50">
+                  <td v-for="col in columns"
+                      :key="col"
+                      class="px-4 py-3 whitespace-nowrap">
                     <span v-if="row[col]" class="text-gray-700">{{ row[col] }}</span>
                     <span v-else class="text-gray-300 italic text-xs">empty</span>
                   </td>
@@ -164,20 +150,16 @@
             </span>
             <!--reset if going back-->
             <div class="flex gap-3">
-              <UButton
-                variant="outline"
-                color="neutral"
-                class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
-                @click="reset"
-              >
+              <UButton variant="outline"
+                       color="neutral"
+                       class="hover:bg-gray-100 active:scale-95 transition-all duration-150"
+                       @click="reset">
                 &larr; Back
               </UButton>
               <!-- Enabled for now not actually calculating -> CHANGE LATER!!!!!!!!-->
-              <UButton
-                class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
-                :disabled="validationResult !== true"
-                @click ="calculateData"
-              >
+              <UButton class="bg-[#40e191] hover:bg-[#33b474] active:scale-95 transition-all duration-150"
+                       :disabled="validationResult !== true"
+                       @click="calculateData">
                 Calculate Percentiles &rarr;
               </UButton>
             </div>
@@ -200,7 +182,7 @@
       <div v-if="currentStep === 2">
         <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center mb-6">
           <p v-if="!dataCalcFin" class="text-xl font-semibold text-gray-700">Calculating - Please wait</p>
-          <p v-if= "dataCalcFin" class="text-xl font-semibold text-gray-700">Finished Calculating</p>
+          <p v-if="dataCalcFin" class="text-xl font-semibold text-gray-700">Finished Calculating</p>
         </div>
 
         <!-- Bottom outline with Back/Forward buttons -->
@@ -271,13 +253,18 @@
             </UButton>
             <!-- download buttons for word/excel -->
             <div class="flex items-center gap-20 mx-auto">
-              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="generateReports">
+              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="PNModalShow = true">
                 Download Selected Word Documents
               </UButton>
               <UButton @click="generateExcel">
                 Download Data Excel
               </UButton>
             </div>
+            <getProgramNameModel 
+              v-model:PNModalShow="PNModalShow"
+              v-model:programName="programName"
+              @submit="generateReports"
+            />
           </div>
         </div>
       </div>
@@ -295,7 +282,7 @@ const toast = useToast()
 //MCDI form
 const selectedForm = ref('')
 //what step we're on
-const currentStep = ref(0)
+  const currentStep = ref(0)
 //checker to see if a user is dragging a file over the dropzone
 const dragOver = ref(false)
 //handler for clicking dropzone or file button
@@ -325,6 +312,11 @@ const formTypes = [
 
 //step labels
 const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
+
+//show the get program name modal
+const PNModalShow = ref(true);
+//program name holder
+const programName = ref('');
 
 //for dropping file
 function handleDrop(e: DragEvent) {
@@ -470,6 +462,7 @@ async function generateReports() {
         formType: selectedForm.value,
         selectedIndices: [...selectedRows.value],
         outputRows: outputRows.value,
+        programName: programName.value,
       },
     }) as any
     //convert base64 back to a blob and trigger browser download
