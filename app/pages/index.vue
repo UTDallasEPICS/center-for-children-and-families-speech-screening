@@ -68,7 +68,7 @@
           @click="fileInput?.click()"
         >
           <!-- handle selected file with custom handle and hide default -->
-          <input ref="fileInput" type="file" accept=".csv, .xlsx" class="hidden" @change="handleFileSelect" />
+          <input ref="fileInput" type="file" accept=".csv,.xlsx" class="hidden" @change="handleFileSelect" />
           <div class="flex flex-col items-center gap-4">
             <!-- drag over styling for the rounded square in the middle -->
             <div
@@ -333,7 +333,7 @@ const formTypes = [
 ]
 
 //step labels
-const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
+const steps = ['Upload File', 'Preview Data', 'Calculate', 'Download Results']
 
 //for dropping file
 function handleDrop(e: DragEvent) {
@@ -375,19 +375,26 @@ function processFile(file: File) {
       //map form type to the correct sheet name in the input Excel template
       const sheetMap: Record<string, string> = {
         engSF_8_18:    'engSF8-18',
-        engSF_16_30:   'engSF16-30',
+        engSF_16_30:   'engSF19-30',
         SE_8_18:       'SE8-18',
-        SE_16_30:      'SE16-30',
+        SE_16_30:      'SE19-30',
         ME_8_18:       'ME8-18',
-        ME_16_30:      'ME16-30',
+        ME_16_30:      'ME19-30',
         engOther_8_18: 'engOther8-18',
-        engOther_16_30:'engOther16-30',
+        engOther_16_30:'engOther19-30',
       }
       //grab the sheet matching the selected form type, fall back to first sheet if not found
-      const sheetName = sheetMap[selectedForm.value] ?? workbook.SheetNames[0]
-      const sheet = workbook.Sheets[sheetName as string]
+      let sheetName = sheetMap[selectedForm.value]
+      let sheet = sheetName ? workbook.Sheets[sheetName] : undefined
+      
+      if (!sheet && workbook.SheetNames.length > 0) {
+        sheetName = workbook.SheetNames[0]
+        sheet = workbook.Sheets[sheetName]
+      }
+
       if (!sheet) {
-        console.error(`Sheet "${sheetName}" not found in workbook`)
+        console.error(`No sheets found in workbook`)
+        toast.add({ title: 'Invalid File', description: 'No sheets found in the Excel workbook.', color: 'error' })
         return
       }
       //convert to csv string — SheetJS handles date formatting etc
