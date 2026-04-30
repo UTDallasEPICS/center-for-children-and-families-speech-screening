@@ -314,7 +314,7 @@ const formTypes = [
 const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
 
 //show the get program name modal
-const PNModalShow = ref(true);
+const PNModalShow = ref(false);
 //program name holder
 const programName = ref('');
 
