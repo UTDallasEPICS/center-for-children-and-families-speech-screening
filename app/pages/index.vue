@@ -46,10 +46,12 @@
       <div class="mb-8 flex items-center gap-3" v-if="currentStep < 2">
         <label class="text-sm font-medium text-gray-500">Form Type:</label>
         <!-- Update form selection-->
-        <USelect v-model="selectedForm"
-                 :items="formTypes"
-                 placeholder="Select MCDI Form..."
-                 class="min-w-[280px]" />
+        <USelect
+          v-model="selectedForm"
+          :items="formTypes"
+          placeholder="Select MCDI Form..."
+          class="min-w-[280px]"
+        />
       </div>
 
       <!-- UPLOAD -->
@@ -286,13 +288,13 @@
           <div class="white-background-border bottom-header flex-center-JusBetween">
             <UButton class="back-button" @click="reset"> &larr; Back home </UButton>
             <!-- download buttons for word/excel -->
-            <div class="flex items-center gap-20 mx-auto">
+            <div class="mx-auto flex items-center gap-20">
               <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="PNModalShow = true">
                 Download Selected Word Documents
               </UButton>
               <UButton @click="generateExcel"> Download Data Excel </UButton>
             </div>
-            <getProgramNameModel 
+            <getProgramNameModel
               v-model:PNModalShow="PNModalShow"
               v-model:programName="programName"
               @submit="generateReports"
@@ -305,67 +307,56 @@
 </template>
 
 <script setup lang="ts">
-import { validateFormData } from '~/utils/form-validation'
-import './assets/css/main.css'
+  import { validateFormData } from '~/utils/form-validation'
+  import './assets/css/main.css'
 
-const toast = useToast()
+  const toast = useToast()
 
-//MCDI form
-const selectedForm = ref('')
-//what step we're on
+  //MCDI form
+  const selectedForm = ref('')
+  //what step we're on
   const currentStep = ref(0)
-//checker to see if a user is dragging a file over the dropzone
-const dragOver = ref(false)
-//handler for clicking dropzone or file button
-const fileInput = ref<HTMLInputElement | null>(null)
-//File information based on inputted csv
-const fileName = ref('')
-const fileSize = ref('')
-const columns = ref<string[]>([])
-const rows = ref<Record<string, string>[]>([])
-//checker to see if data calculation is ready to display (activates continue button from page 3->4)
-const dataCalcFin = ref(false)
-//stores processed data returned from the calculate endpoint
-const outputRows = ref<any[]>([])
-//tracks which rows are selected via checkboxes for word doc download
-const selectedRows = ref<Set<number>>(new Set())
-//dropdown options
-const formTypes = [
-  { label: 'English Only 8-18 mo', value: 'engSF_8_18' },
-  { label: 'English Only 19-30 mo', value: 'engSF_16_30' },
-  { label: 'Spanish-English 8-18 mo', value: 'SE_8_18' },
-  { label: 'Spanish-English 19-30 mo', value: 'SE_16_30' },
-  { label: 'Mandarin-English 8-18 mo', value: 'ME_8_18' },
-  { label: 'Mandarin-English 19-30 mo', value: 'ME_16_30' },
-  { label: 'DNE 8-18 mo', value: 'engOther_8_18' },
-  { label: 'DNE 19-30 mo', value: 'engOther_16_30' },
-]
+  //checker to see if a user is dragging a file over the dropzone
+  const dragOver = ref(false)
+  //handler for clicking dropzone or file button
+  const fileInput = ref<HTMLInputElement | null>(null)
+  //File information based on inputted csv
+  const fileName = ref('')
+  const fileSize = ref('')
+  const columns = ref<string[]>([])
+  const rows = ref<Record<string, string>[]>([])
+  //checker to see if data calculation is ready to display (activates continue button from page 3->4)
+  const dataCalcFin = ref(false)
+  //stores processed data returned from the calculate endpoint
+  const outputRows = ref<any[]>([])
+  //tracks which rows are selected via checkboxes for word doc download
+  const selectedRows = ref<Set<number>>(new Set())
+  //dropdown options
+  const formTypes = [
+    { label: 'English Only 8-18 mo', value: 'engSF_8_18' },
+    { label: 'English Only 19-30 mo', value: 'engSF_16_30' },
+    { label: 'Spanish-English 8-18 mo', value: 'SE_8_18' },
+    { label: 'Spanish-English 19-30 mo', value: 'SE_16_30' },
+    { label: 'Mandarin-English 8-18 mo', value: 'ME_8_18' },
+    { label: 'Mandarin-English 19-30 mo', value: 'ME_16_30' },
+    { label: 'DNE 8-18 mo', value: 'engOther_8_18' },
+    { label: 'DNE 19-30 mo', value: 'engOther_16_30' },
+  ]
 
-//step labels
-const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
+  //step labels
+  const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
 
-//show the get program name modal
-const PNModalShow = ref(false);
-//program name holder
-const programName = ref('');
+  //show the get program name modal
+  const PNModalShow = ref(false)
+  //program name holder
+  const programName = ref('')
 
-//for dropping file
-function handleDrop(e: DragEvent) {
-  dragOver.value = false
-  const file = e.dataTransfer?.files[0]
-  //error handling needed for different files
-  if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) processFile(file)
-}
-
-//Processes file — converts xlsx to csv if needed, then parses for preview
-function processFile(file: File) {
-  if (!selectedForm.value) {
-    toast.add({
-      title: 'No form type selected',
-      description: 'Please select a form type before uploading your CSV/Excel file.',
-      color: 'error'
-    })
-    return
+  //for dropping file
+  function handleDrop(e: DragEvent) {
+    dragOver.value = false
+    const file = e.dataTransfer?.files[0]
+    //error handling needed for different files
+    if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) processFile(file)
   }
 
   //for clicking file
@@ -373,6 +364,17 @@ function processFile(file: File) {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (file) processFile(file)
   }
+
+  //Processes file — converts xlsx to csv if needed, then parses for preview
+  function processFile(file: File) {
+    if (!selectedForm.value) {
+      toast.add({
+        title: 'No form type selected',
+        description: 'Please select a form type before uploading your CSV/Excel file.',
+        color: 'error',
+      })
+      return
+    }
 
     fileName.value = file.name
     //maybe add error handling for filesize? Accidentally putting large files breaks application
@@ -436,25 +438,16 @@ function processFile(file: File) {
     //get and split column and row info for each
     const headerLine = lines[0]
     if (!headerLine) return
-    const csvRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/
-    columns.value = headerLine.split(csvRegex).map((h) => h.trim())
+    columns.value = headerLine.split(',').map((h) => h.trim())
     //skip row 2 if xlsx (the "for percentile calculation" label row in the Excel input template)
     const dataLines = skipSecondRow ? lines.slice(2) : lines.slice(1)
     const parsedRows = dataLines
       .map((line) => {
-        const values = line.split(csvRegex)
+        const values = line.split(',')
         //object for keeping track of all rows
         const row: Record<string, string> = {}
         columns.value.forEach((h, i) => {
-          let val = values[i]?.trim() || ''
-
-          if (val.startsWith('"') && val.endsWith('"')) {
-            val = val.substring(1, val.length - 1).replace(/""/g, '"')
-          }
-          val = val.replace(/;/g, '')
-          val = val.replace(/,\s*$/, '')
-          val = val.replace(/\s\s+/g, ' ').trim()
-          row[h] = val
+          row[h] = values[i]?.trim() || ''
         })
         return row
       })
@@ -464,39 +457,7 @@ function processFile(file: File) {
     //update wizard
     currentStep.value = 1
   }
-  dataCalcFin.value = true
-}
 
-//format calculated data for last page
-function displayData() {
-  currentStep.value = 3
-}
-
-//sends selected rows to backend to generate .docx reports as a zip
-async function generateReports() {
-  try {
-    const response = await $fetch('/api/mcdi/generate-reports', {
-      method: 'POST',
-      body: {
-        formType: selectedForm.value,
-        selectedIndices: [...selectedRows.value],
-        outputRows: outputRows.value,
-        programName: programName.value,
-      },
-    }) as any
-    //convert base64 back to a blob and trigger browser download
-    const bytes = atob(response.base64)
-    const byteArray = new Uint8Array(bytes.length)
-    for (let i = 0; i < bytes.length; i++) byteArray[i] = bytes.charCodeAt(i)
-    const blob = new Blob([byteArray], { type: 'application/zip' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = response.fileName
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Generate reports failed:', err)
   // compute validation dynamically so changing the dropdown re-evaluates
   const validationResult = computed(() => {
     if (!selectedForm.value || rows.value.length === 0) return true
@@ -522,8 +483,40 @@ async function generateReports() {
     } catch (err) {
       console.error('Calculate failed:', err)
     }
-
     dataCalcFin.value = true
+  }
+
+  //format calculated data for last page
+  function displayData() {
+    currentStep.value = 3
+  }
+
+  //sends selected rows to backend to generate .docx reports as a zip
+  async function generateReports() {
+    try {
+      const response = (await $fetch('/api/mcdi/generate-reports', {
+        method: 'POST',
+        body: {
+          formType: selectedForm.value,
+          selectedIndices: [...selectedRows.value],
+          outputRows: outputRows.value,
+          programName: programName.value,
+        },
+      })) as any
+      //convert base64 back to a blob and trigger browser download
+      const bytes = atob(response.base64)
+      const byteArray = new Uint8Array(bytes.length)
+      for (let i = 0; i < bytes.length; i++) byteArray[i] = bytes.charCodeAt(i)
+      const blob = new Blob([byteArray], { type: 'application/zip' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = response.fileName
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Generate reports failed:', err)
+    }
   }
 
   //sends processed data to backend to generate a .xlsx file
