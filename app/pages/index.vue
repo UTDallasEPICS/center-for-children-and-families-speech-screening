@@ -438,16 +438,25 @@
     //get and split column and row info for each
     const headerLine = lines[0]
     if (!headerLine) return
-    columns.value = headerLine.split(',').map((h) => h.trim())
+    const csvRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/
+    columns.value = headerLine.split(csvRegex).map((h) => h.trim())
     //skip row 2 if xlsx (the "for percentile calculation" label row in the Excel input template)
     const dataLines = skipSecondRow ? lines.slice(2) : lines.slice(1)
     const parsedRows = dataLines
       .map((line) => {
-        const values = line.split(',')
+        const values = line.split(csvRegex)
         //object for keeping track of all rows
         const row: Record<string, string> = {}
         columns.value.forEach((h, i) => {
-          row[h] = values[i]?.trim() || ''
+          let val = values[i]?.trim() || ''
+
+          if (val.startsWith('"') && val.endsWith('"')) {
+            val = val.substring(1, val.length - 1).replace(/""/g, '"')
+          }
+          val = val.replace(/;/g, '')
+          val = val.replace(/,\s*$/, '')
+          val = val.replace(/\s\s+/g, ' ').trim()
+          row[h] = val
         })
         return row
       })
