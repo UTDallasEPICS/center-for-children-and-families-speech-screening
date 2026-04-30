@@ -111,26 +111,30 @@
         return
       }
 
-      const newRole = user.role === "ADMIN" ? "STUDENT" : "ADMIN"
-      
-      if (user.role === "ADMIN") {
-        const adminCount = users.value.filter(u => u.role === "ADMIN").length
-
-        if (adminCount <= 1) {
-          toast.add({title: 'Error', description: 'Error: At least one admin must be in the database', color: 'red' })
-          return
-        }
+      let newRole;
+      if (user.role === "SUPER_ADMIN") {
+        newRole = "SUPER_ADMIN"; 
+      } else if (user.role === "ADMIN") {
+        newRole = "STUDENT";
+      } else {
+        newRole = "ADMIN";
       }
 
       const updatedUser = await $fetch(`/api/users/${id}`, {
         method: "PUT",
         body: { role: newRole }
       })
+      
+      toast.add({title: 'Role Updated', description: 'Role update was successful', color: 'blue'})
 
-      users.value = users.value.map(u => u.id === id ? updatedUser : u)
 
     } catch (err) {
+      if(err?.statusCode === 403){
+        toast.add({title: 'Error', description: 'Only Super Admin can change roles', color: 'red'})
+      }
+      else{
       toast.add({title: 'Error', description: 'Role update failed', color: 'red'})
       }
+    }
   }
 </script>

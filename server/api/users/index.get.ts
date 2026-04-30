@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 3. Check the role directly from the session object (The PM's requirement)
-  if (session?.user.role !== 'ADMIN') {
+  if (session?.user.role !== 'ADMIN' && session?.user.role !== "SUPER_ADMIN") {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: Admins only' });
   }
 
