@@ -289,11 +289,16 @@
             <UButton class="back-button" @click="reset"> &larr; Back home </UButton>
             <!-- download buttons for word/excel -->
             <div class="mx-auto flex items-center gap-20">
-              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="generateReports">
+              <UButton class="bg-[#3591d1] hover:bg-[#68addd]" @click="PNModalShow = true">
                 Download Selected Word Documents
               </UButton>
               <UButton @click="generateExcel"> Download Data Excel </UButton>
             </div>
+            <getProgramNameModel
+              v-model:PNModalShow="PNModalShow"
+              v-model:programName="programName"
+              @submit="generateReports"
+            />
           </div>
         </div>
       </div>
@@ -340,6 +345,11 @@
 
   //step labels
   const steps = ['Upload CSV', 'Preview Data', 'Calculate', 'Download Results']
+
+  //show the get program name modal
+  const PNModalShow = ref(false)
+  //program name holder
+  const programName = ref('')
 
   //for dropping file
   function handleDrop(e: DragEvent) {
@@ -482,7 +492,6 @@
     } catch (err) {
       console.error('Calculate failed:', err)
     }
-
     dataCalcFin.value = true
   }
 
@@ -500,6 +509,7 @@
           formType: selectedForm.value,
           selectedIndices: [...selectedRows.value],
           outputRows: outputRows.value,
+          programName: programName.value,
         },
       })) as any
       //convert base64 back to a blob and trigger browser download
