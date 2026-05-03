@@ -1,26 +1,27 @@
 <template>
-  <div class="layout">
-    <Sidebar />
+  <div class="flex w-full flex-col">
     <div class="users-page">
-      <!-- Page Header -->
-      <header class="page-header">
-        <h1>Manage Users</h1>
-      </header>
-
       <section class="content">
-        <!-- Users List Card -->
-        <div class="userlist">
-          <div class="flex items-center justify-between">
-            <h2 class="userlist-title">Current Users</h2>
+        <header class="grid grid-cols-3 items-center px-4 py-3">
+          <div></div>
+
+          <h1 class="text-center text-2xl font-bold">Manage Users</h1>
+
+          <div class="flex justify-end px-4">
             <ccfbutton variant="btn-primary" @action="showModal = true"> Add Users </ccfbutton>
+          </div>
+        </header>
+
+        <div class="userlist">
+          <div class="mb-4">
             <addUsersModal
               v-model:showModal="showModal"
               v-model:netIds="netIds"
               @submit="handleSubmit"
             />
           </div>
-            <UsersTable :users="users" @delete="deleteUser" @edit="editUser"/> 
-       </div>
+          <UsersTable :users="users" @delete="deleteUser" @edit="editUser" />
+        </div>
       </section>
     </div>
   </div>
@@ -64,29 +65,38 @@
     const { validIds, invalidIds } = validateNetIdInput(ids)
 
     if (invalidIds.length) {
-      alert(`These ids are invalid: " ${invalidIds.join(', ')}`)
+      alert(`These ids are invalid: ${invalidIds.join(', ')}`)
       return
     }
 
     try {
       const results = await Promise.all(
-        validIds.map((id) =>
-          fetch('/api/users', {
+        validIds.map(async (id) => {
+          id = id.toLowerCase()
+          const res = await fetch('/api/users', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: `${id}@utdallas.edu`, role: 'STUDENT' }),
           })
-        )
+
+          if (res.ok) return { status: 'success', data: await res.json() }
+          if (res.status === 409) return { status: 'exists', id: id }
+          return { status: 'failed', id: id }
+        })
       )
 
-      console.log('Users created: ', results)
+      const successfulUsers = results.filter((r) => r.status === 'success').map((r) => r.data)
+      users.value.push(...successfulUsers)
+
+      const duplicates = results.filter((r) => r.status === 'exists').map((r) => r.id)
+
+      if (duplicates.length) {
+        alert(`These ids already exist: ${duplicates.join(', ')}`)
+      }
     } catch (err) {
-      console.error('Error:', err)
+      console.error('Unexpected Error:', err)
     }
   }
-
   const validateNetIdInput = (ids) => {
     const splitIds = ids.trim().split(/[\s,]+/)
     const validIds = []
@@ -106,34 +116,35 @@
 
   const editUser = async (id) => {
     try {
-      const user = users.value.find(u => u.id === id)
-      if (!user){ 
+      const user = users.value.find((u) => u.id === id)
+      if (!user) {
         return
       }
 
-      let newRole;
-      if (user.role === "SUPER_ADMIN") {
-        newRole = "SUPER_ADMIN"; 
-      } else if (user.role === "ADMIN") {
-        newRole = "STUDENT";
+      let newRole
+      if (user.role === 'SUPER_ADMIN') {
+        newRole = 'SUPER_ADMIN'
+      } else if (user.role === 'ADMIN') {
+        newRole = 'STUDENT'
       } else {
-        newRole = "ADMIN";
+        newRole = 'ADMIN'
       }
 
       const updatedUser = await $fetch(`/api/users/${id}`, {
-        method: "PUT",
-        body: { role: newRole }
+        method: 'PUT',
+        body: { role: newRole },
       })
-      
-      toast.add({title: 'Role Updated', description: 'Role update was successful', color: 'blue'})
 
-
+      toast.add({ title: 'Role Updated', description: 'Role update was successful', color: 'blue' })
     } catch (err) {
-      if(err?.statusCode === 403){
-        toast.add({title: 'Error', description: 'Only Super Admin can change roles', color: 'red'})
-      }
-      else{
-      toast.add({title: 'Error', description: 'Role update failed', color: 'red'})
+      if (err?.statusCode === 403) {
+        toast.add({
+          title: 'Error',
+          description: 'Only Super Admin can change roles',
+          color: 'red',
+        })
+      } else {
+        toast.add({ title: 'Error', description: 'Role update failed', color: 'red' })
       }
     }
   }

@@ -1,7 +1,7 @@
 <template>
-  <button :class="variant" @click="handleClick">
+  <UButton :class="variant" @click="handleClick">
     <slot>Submit</slot>
-  </button>
+  </UButton>
 </template>
 
 <script setup>
@@ -31,6 +31,6 @@
       const confirmed = confirm(props.confirmationMessage)
       if (!confirmed) return
     }
-    emit('action', props.id)
+    emit('action')
   }
 </script>

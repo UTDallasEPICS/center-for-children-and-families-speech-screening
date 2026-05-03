@@ -26,6 +26,11 @@
   })
 
   async function handleSubmit(event: FormSubmitEvent<any>) {
+    try {
+      await $fetch('api/users/autodelete', { method: 'POST' })
+    } catch (err) {
+      console.error('Autodelete failed:', err)
+    }
     if (!isEmailSent.value) {
       const { data, error } = await authClient.emailOtp.sendVerificationOtp({
         email: state.email,

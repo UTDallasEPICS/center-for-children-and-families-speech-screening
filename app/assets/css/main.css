@@ -3,19 +3,18 @@
 
 @theme {
   --color-main-green: #40e191;
-  --color-main-blue: #0077C0;
+  --color-main-blue: #0077c0;
   --color-off-main-blue: #005a94;
-  --color-off-white: #F9FAFB;
+  --color-off-white: #f9fafb;
   --color-light-gray: #eeeeee;
   --color-off-black: #0f172b;
-  --color-confirmation-green: #8DC63F;
+  --color-confirmation-green: #8dc63f;
 }
-
 
 /*default frames*/
 .flex-center-center {
-  display:flex;
-  flex-direction:row;
+  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 }
@@ -64,7 +63,6 @@
   padding: 4rem;
   text-align: center;
   cursor: pointer;
-
 }
 
 .transition-ease {
@@ -80,16 +78,15 @@ button {
   transition-timing-function: ease;
 }
 button:active {
-  scale: .95;
+  scale: 0.95;
 }
-
 
 /*default back buttons*/
 button.back-button {
   border-width: 1px;
   border-color: black;
   background-color: var(--color-off-black);
-  color:white;
+  color: white;
 }
 button.back-button:hover {
   background-color: #5c5c5c;
@@ -105,7 +102,6 @@ button.forward-button {
 button.forward-button:hover {
   background-color: #95eec2;
 }
-
 
 /*text defaults*/
 .footnote-text {
@@ -125,16 +121,9 @@ button.forward-button:hover {
   letter-spacing: 0.1em;
 }
 
-.layout {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  height: 100vh;
-}
-
 .sidebar {
   width: 220px;
-  height: 100vh;
+  height: auto;
   background: #4b7dbb;
   padding: 24px 18px;
   display: flex;
@@ -197,7 +186,7 @@ button.forward-button:hover {
 
 .users-page {
   flex: 1;
-  padding: 2rem;
+  padding: 1rem;
   color: white;
 }
 
@@ -218,10 +207,14 @@ button.forward-button:hover {
 /* User List Styling */
 .userlist {
   background: white;
-  padding: 1.5rem;
+  padding: 0 1.5rem;
   border-radius: 10px;
   width: 100%;
   border: 1px solid lightgrey;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .userlist-title {
@@ -248,41 +241,36 @@ button.forward-button:hover {
 
 /* Buttons */
 .btn-primary {
-  background: #4f8cff;
+  background: #0077c0;
+  border: 1px solid transparent;
+  transition: all 150ms ease-in-out;
   padding: 0.6rem 1rem;
   border-radius: 6px;
-  border: none;
-  color: black;
+  color: white;
   cursor: pointer;
+}
+.btn-primary:hover {
+  background-color: #005a94;
+}
+.btn-primary:active {
+  transform: scale(0.95);
 }
 
 .btn-danger {
-  background: #ff4f4f;
+  background: #fa0536;
   padding: 0.4rem 0.7rem;
   border-radius: 6px;
   border: none;
-  color: black;
+  color: white;
+  transition: all 150ms ease-in-out;
   cursor: pointer;
 }
-
-/* Users Table */
-.users-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
+.btn-danger:hover {
+  background-color: #c4002d;
 }
-
-.users-table th,
-.users-table td {
-  padding: 0.8rem;
-  border-bottom: 1px solid #333;
+.btn-danger:active {
+  transform: scale(0.95);
 }
-
-.users-table th {
-  text-align: left;
-  font-weight: 600;
-}
-
 
 .modal-overlay {
   position: fixed;
@@ -303,7 +291,6 @@ button.forward-button:hover {
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  width: 350px;
   color:#333;
 }
 
@@ -312,7 +299,7 @@ button.forward-button:hover {
   padding: 8px;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  color: rgba(84, 106, 127, 0.562)
+  color: rgba(84, 106, 127, 0.562);
 }
 
 .modal-actions {
