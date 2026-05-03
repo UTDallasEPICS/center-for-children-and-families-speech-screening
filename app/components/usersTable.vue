@@ -11,16 +11,20 @@
     </thead>
 
     <tbody>
+
       <tr v-for="user in users" :key="user.id">
         <td>{{ user.email }}</td>
         <td>{{ user.role }}</td>
         <td>{{ formatExpire(user.expiresAt) }}</td>
         <td>{{ daysLeft(user.expiresAt) }} days</td>
         <td>
-            <div class = "flex items-center gap-2">
-              <Ccfbutton variant = "btn-primary" @action="editUser(user.id)" :needsConfirmation = "true" confirmationMessage="Are you sure you want to change this users role?">Edit</Ccfbutton>
-              <ccfbutton variant="btn-danger" :needsConfirmation="true" confirmationMessage="Are you sure you want to delete this user?"@action="deleteUser(user.id)">Delete</ccfbutton>
-            </div>
+          <div class="flex items-center gap-2" v-if="user.role !== 'SUPER_ADMIN' && session?.data?.user?.role === 'SUPER_ADMIN'">
+            <Ccfbutton variant = "btn-primary" @action="editUser(user.id)" :needsConfirmation = "true" confirmationMessage="Are you sure you want to change this users role?">  {{ user.role === 'ADMIN' ? 'Demote' : 'Promote' }}</Ccfbutton>
+            <ccfbutton variant="btn-danger" :needsConfirmation="true" confirmationMessage="Are you sure you want to delete this user?"@action="deleteUser(user.id)">Delete</ccfbutton>
+          </div>
+          <div class= "flex items-center gap-2" v-if="session?.data?.user?.role === 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role != 'ADMIN' ">
+            <ccfbutton variant="btn-danger" :needsConfirmation="true" confirmationMessage="Are you sure you want to delete this user?"@action="deleteUser(user.id)">Delete</ccfbutton>
+          </div>
         </td>
       </tr>
     </tbody>
@@ -29,6 +33,12 @@
 
 <script setup>
   import { defineProps, defineEmits } from 'vue'
+
+  const session = ref(null)
+
+  onMounted(async () => {
+    session.value = await authClient.getSession()
+  })
 
   const props = defineProps({
     users: {
@@ -54,6 +64,7 @@
 
   // The Delete Function
   async function deleteUser(id) {
+    const toast = useToast()
     try {
       await $fetch(`/api/users/${id}`, {
         method: 'DELETE',
@@ -61,7 +72,8 @@
 
       emit('delete', id)
 
-      console.log('Delete successful')
+      toast.add({title: 'Delete Successful', description: 'User was successfully deleted', color: 'blue'})
+
     } catch (err) {
       console.error('Delete failed:', err)
       alert('Delete failed')
