@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   }
   if (currentuser !== undefined) {
-    if (to.path.startsWith('/dashboard') && currentuser.role !== 'ADMIN') {
+    if (to.path.startsWith('/dashboard') && (currentuser.role !== 'ADMIN' && currentuser.role != 'SUPER_ADMIN')) {
       return navigateTo('/')
     }
   }
