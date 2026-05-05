@@ -35,12 +35,15 @@ function isAtRisk(formType: string, row: Record<string, any>): boolean {
   return atRiskValue(wp)
 }
 
-// Format date string to spelled-out format like March 5, 2026
+// Format date as MM/DD/YYYY
 function formatDate(val: string): string {
   if (!val) return ''
   const d = new Date(val)
   if (isNaN(d.getTime())) return val
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  const m   = d.getMonth() + 1
+  const day = d.getDate()
+  const y   = d.getFullYear()
+  return `${m}/${day}/${y}`
 }
 
 // Escape special characters before inserting into XML
@@ -137,23 +140,33 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
   ))
   const dateOfReport = xmlEscape(formatDate(new Date().toISOString().split('T')[0]))
 
+  // Gender labels for Spanish and Mandarin pages
+  const genderES = gender === 'Girl' ? 'Ni\u00f1a' : gender === 'Boy' ? 'Ni\u00f1o' : gender
+  const genderZH = gender === 'Girl' ? '\u5973'    : gender === 'Boy' ? '\u7537'    : gender
+
   // Word sometimes splits 'ENTERnumber' across two runs — merge before replacing
   xml = xml.replace(
     /(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)ENTER(<\/w:t><\/w:r>)(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)number(<\/w:t><\/w:r>)/g,
     '$3ENTERnumber$4'
   )
 
-  // Replace name, gender, age placeholders
+  // Targeted replacements BEFORE global xx — so Mandarin cells get correct values
+  // English gender cell
+  xml = xml.replace(/(Gender(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${gender}${c}`)
+  // Spanish gender cell → Niño/Niña
+  xml = xml.replace(/(G[eé]nero(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${genderES}${c}`)
+  // Mandarin gender cell → 男/女
+  xml = xml.replace(/(性别[\s\S]{0,600}?<w:highlight[^>]*\/>[\s\S]{0,100}?<w:t[^>]*>)xx(<\/w:t>)/, (_, b, c) => `${b}${genderZH}${c}`)
+  // English age cell
+  xml = xml.replace(/(Age[\s\S]*?months[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${age}${c}`)
+  // Spanish age cell
+  xml = xml.replace(/(Edad[\s\S]*?meses[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${age}${c}`)
+  // Mandarin age cell
+  xml = xml.replace(/(月龄[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)xx(<\/w:t>)/, (_, b, c) => `${b}${age}${c}`)
+
+  // Global xx → fullName (runs after targeted cells already handled)
   xml = xml.replace(/(<w:t[^>]*>)xx(<\/w:t>)/g,  (_, o, c) => `${o}${fullName}${c}`)
   xml = xml.replace(/(<w:t[^>]*>)xxx(<\/w:t>)/g, (_, o, c) => `${o}${gender}${c}`)
-
-  // Gender and Género cells also use 'xx' so target them specifically after name replacement
-  xml = xml.replace(/(Gender(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${gender}${c}`)
-  xml = xml.replace(/(G[eé]nero(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${gender}${c}`)
-
-  // Age and Edad cells also use 'xx'
-  xml = xml.replace(/(Age[\s\S]*?months[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${age}${c}`)
-  xml = xml.replace(/(Edad[\s\S]*?meses[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${age}${c}`)
 
   // XX date placeholders in order: Date of Report, Date of MCDI, Birth Date — doubled for bilingual templates
   const dateValues = [dateOfReport, dateOfMcdi, birthDate, dateOfReport, dateOfMcdi, birthDate]
