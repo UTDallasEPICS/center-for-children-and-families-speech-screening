@@ -181,6 +181,7 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
 
   let valueIdx = 0
   xml = xml.replace(/(<w:t[^>]*>)ENTERnumber(<\/w:t>)/g, (_, o, c) => `${o}${xmlEscape(allValues[valueIdx++] ?? '')}${c}`)
+  xml = xml.replace(/(<w:t[^>]*>)\[\s*\](<\/w:t>)/g, (_, o, c) => `${o}${programName}${c}`)
 
   zip.file('word/document.xml', xml)
   return zip.generate({ type: 'nodebuffer' }) as Buffer
