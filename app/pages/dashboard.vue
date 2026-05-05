@@ -20,7 +20,7 @@
               @submit="handleSubmit"
             />
           </div>
-          <UsersTable :users="users" @delete="deleteUser" />
+          <UsersTable :users="users" @delete="deleteUser" @edit="editUser" />
         </div>
       </section>
     </div>
@@ -32,7 +32,10 @@
 <script setup>
   import { ref } from 'vue'
   import { date } from 'zod'
+  import Ccfbutton from '~/components/ccfbutton.vue'
   const users = ref(null)
+
+  const toast = useToast()
 
   await useFetch('/api/users/autodelete', {
     method: 'POST',
@@ -110,17 +113,39 @@
     })
     return { validIds, invalidIds }
   }
-  async function deleteUser(id) {
+
+  const editUser = async (id) => {
     try {
-      await $fetch(`/api/users/${id}`, {
-        method: 'DELETE',
+      const user = users.value.find((u) => u.id === id)
+      if (!user) {
+        return
+      }
+
+      let newRole
+      if (user.role === 'SUPER_ADMIN') {
+        newRole = 'SUPER_ADMIN'
+      } else if (user.role === 'ADMIN') {
+        newRole = 'STUDENT'
+      } else {
+        newRole = 'ADMIN'
+      }
+
+      const updatedUser = await $fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        body: { role: newRole },
       })
 
-      console.log('Delete successful')
-      users.value = users.value.filter((user) => user.id !== id)
+      toast.add({ title: 'Role Updated', description: 'Role update was successful', color: 'blue' })
     } catch (err) {
-      console.error('Delete failed:', err)
-      alert('Delete failed')
+      if (err?.statusCode === 403) {
+        toast.add({
+          title: 'Error',
+          description: 'Only Super Admin can change roles',
+          color: 'red',
+        })
+      } else {
+        toast.add({ title: 'Error', description: 'Role update failed', color: 'red' })
+      }
     }
   }
 </script>

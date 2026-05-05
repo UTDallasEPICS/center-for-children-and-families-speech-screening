@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
 
   if (!session) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
 
-  if (session.user.role !== 'ADMIN') {
+  if (session.user.role !== 'ADMIN' && session.user.role != 'SUPER_ADMIN') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: Only admins can create users' })
   }
 

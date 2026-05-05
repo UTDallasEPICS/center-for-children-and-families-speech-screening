@@ -29,8 +29,7 @@
   }
 
   //user manual setup
-  const showManual = ref(false);
-
+  const showManual = ref(false)
 </script>
 
 <template>
@@ -49,23 +48,28 @@
           </div>
 
           <!-- Need to be valid user and it needs to be on index -->
-          <div v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
-               class="flex items-center gap-4">
-
+          <div
+            v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
+            class="flex items-center gap-4"
+          >
             <!-- Admin dashboard button -->
-            <UButton icon="i-heroicons-user-group"
-                     variant="subtle"
-                     color="info"
-                     v-if="displayUser.role == 'ADMIN'"
-                     @click="useRouter().push(route.path === '/dashboard' ? '/' : '/dashboard')">
-              {{route.path === '/dashboard' ? "Return to MCDI" : "Manage Users"}}
+            <UButton
+              icon="i-heroicons-user-group"
+              variant="subtle"
+              color="info"
+              v-if="displayUser.role !== 'STUDENT'"
+              @click="useRouter().push(route.path === '/dashboard' ? '/' : '/dashboard')"
+            >
+              {{ route.path === '/dashboard' ? 'Return to MCDI' : 'Manage Users' }}
             </UButton>
 
             <!-- website manuel -->
-            <UButton icon="i-heroicons-book-open"
-                     variant="subtle"
-                     color="neutral"
-                     @click="showManual = true">
+            <UButton
+              icon="i-heroicons-book-open"
+              variant="subtle"
+              color="neutral"
+              @click="showManual = true"
+            >
               User Manual
             </UButton>
             <userManualModal v-model:showManual="showManual" />

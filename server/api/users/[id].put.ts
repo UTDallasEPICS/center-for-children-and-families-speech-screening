@@ -7,14 +7,14 @@ export default defineEventHandler(async (event) => {
   
   if (!session) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
 
-  if (session.user.role !== 'ADMIN' && session.user.id !== id) {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden: You can only edit your own profile' });
+  if (session.user.role !== 'SUPER_ADMIN' && session.user.id !== id) {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden: Only Super Admin can change roles' });
   }
 
   const body = await readBody(event);
 
   // Security Check: Block privilege escalation
-  if (session.user.role !== 'ADMIN' && body.role && body.role === 'ADMIN') {
+  if (session.user.role !== 'SUPER_ADMIN' && body.role && body.role === 'ADMIN') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden: Cannot grant yourself admin privileges' });
   }
 
