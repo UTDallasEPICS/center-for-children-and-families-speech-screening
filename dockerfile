@@ -6,7 +6,6 @@ WORKDIR /app
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
-COPY .npmrc ./
 
 ENV PNPM_HOME="~/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
