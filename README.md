@@ -10,17 +10,22 @@ This application automates the manual workflow for the researchers. Researchers 
 
 ## User Roles
 
-**Researcher**
+**STUDENT**
 - Uploads Excel files containing child assessment data
 - Selects the correct MCDI form type 
 - Ensures calculated percentile scores look good
 - Downloads the Excel output and Word reports
 
-**Admin**
+**ADMIN**
 - Everything researches can do
 - Accesses the admin dashboard
 - Creates authorized users by NetID
-- Manually deletes users
+- Deletes students
+
+**SUPER_ADMIN**
+- Everything admins can do
+- Promote students to admins or demote admins to students
+- Delete admins
 
 ---
 
