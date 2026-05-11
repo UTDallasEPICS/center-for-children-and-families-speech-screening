@@ -17,6 +17,7 @@ This application automates the manual workflow for the researchers. Researchers 
 - Downloads the Excel output and Word reports
 
 **ADMIN**
+
 - Everything researches can do
 - Accesses the admin dashboard
 - Creates authorized users by NetID
@@ -118,9 +119,9 @@ Open `.env` and fill in the following:
 ### 4. Set up the database
 
 ```bash
-npx prisma migrate dev
-npx prisma generate
-npx prisma db seed
+pnpm prisma migrate dev
+pnpm prisma generate
+pnpm prisma db seed
 ```
 
 To reset and re-seed:
