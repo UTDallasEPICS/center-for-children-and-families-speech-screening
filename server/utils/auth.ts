@@ -7,12 +7,14 @@ import { UserRole } from '@prisma/client'
 import { toDisplayString } from 'vue'
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.EMAIL_HOST,
+  port: 587,
+  secure: false, // use STARTTLS (upgrade connection to TLS after connecting)
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-})
+});
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -67,7 +69,7 @@ export const auth = betterAuth({
       allowedAttempts: 3,
       async sendVerificationOTP({ email, otp, type }) {
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: process.env.EMAIL_FROM,
           to: email,
           subject: 'CCF OTP Verification Code',
           headers: { 'X-Priority': '1 (Highest)', 'X-MSMail-Priority': 'High', Importance: 'High' },
