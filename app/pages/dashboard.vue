@@ -126,18 +126,28 @@
       }
 
       let newRole
+
       if (user.role === 'SUPER_ADMIN') {
         newRole = 'SUPER_ADMIN'
       } else if (user.role === 'ADMIN') {
+        // DEMOTION
         newRole = 'STUDENT'
+        const expirationDate = new Date()
+        expirationDate.setMonth(expirationDate.getMonth() + 4)
+        const updatedUser = await $fetch(`/api/users/${id}`, {
+          method: 'PUT',
+          body: { role: newRole, expiresAt: expirationDate },
+        })
+        user.expiresAt = expirationDate
       } else {
+        // PROMOTION
         newRole = 'ADMIN'
+        const expirationDate = new Date(user.expiresAt)
+        const updatedUser = await $fetch(`/api/users/${id}`, {
+          method: 'PUT',
+          body: { role: newRole },
+        })
       }
-
-      const updatedUser = await $fetch(`/api/users/${id}`, {
-        method: 'PUT',
-        body: { role: newRole },
-      })
 
       user.role = newRole
 
