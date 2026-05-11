@@ -27,13 +27,13 @@
               class="flex items-center gap-2"
               v-if="user.role !== 'SUPER_ADMIN' && session?.data?.user?.role === 'SUPER_ADMIN'"
             >
-              <Ccfbutton
+              <ccfbutton
                 variant="btn-primary"
                 @action="editUser(user.id)"
                 :needsConfirmation="true"
                 confirmationMessage="Are you sure you want to change this users role?"
               >
-                {{ user.role === 'ADMIN' ? 'Demote' : 'Promote' }}</Ccfbutton
+                {{ user.role === 'ADMIN' ? 'Demote' : 'Promote' }}</ccfbutton
               >
               <ccfbutton
                 variant="btn-danger"
