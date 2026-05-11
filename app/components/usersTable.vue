@@ -14,8 +14,14 @@
         <tr v-for="user in users" :key="user.id">
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
-          <td>{{ formatExpire(user.expiresAt) }}</td>
-          <td>{{ daysLeft(user.expiresAt) }} days</td>
+          <td>
+            <div v-if="user.role == 'STUDENT'">{{ formatExpire(user.expiresAt) }}</div>
+            <div v-else>N/A</div>
+          </td>
+          <td>
+            <div v-if="user.role == 'STUDENT'">{{ daysLeft(user.expiresAt) }} days</div>
+            <div v-else>N/A</div>
+          </td>
           <td>
             <div
               class="flex items-center gap-2"
