@@ -14,20 +14,26 @@
         <tr v-for="user in users" :key="user.id">
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
-          <td>{{ formatExpire(user.expiresAt) }}</td>
-          <td>{{ daysLeft(user.expiresAt) }} days</td>
+          <td>
+            <div v-if="user.role == 'STUDENT'">{{ formatExpire(user.expiresAt) }}</div>
+            <div v-else>N/A</div>
+          </td>
+          <td>
+            <div v-if="user.role == 'STUDENT'">{{ daysLeft(user.expiresAt) }} days</div>
+            <div v-else>N/A</div>
+          </td>
           <td>
             <div
               class="flex items-center gap-2"
               v-if="user.role !== 'SUPER_ADMIN' && session?.data?.user?.role === 'SUPER_ADMIN'"
             >
-              <Ccfbutton
+              <ccfbutton
                 variant="btn-primary"
                 @action="editUser(user.id)"
                 :needsConfirmation="true"
                 confirmationMessage="Are you sure you want to change this users role?"
               >
-                {{ user.role === 'ADMIN' ? 'Demote' : 'Promote' }}</Ccfbutton
+                {{ user.role === 'ADMIN' ? 'Demote' : 'Promote' }}</ccfbutton
               >
               <ccfbutton
                 variant="btn-danger"

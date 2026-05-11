@@ -244,7 +244,6 @@ button.forward-button:hover {
   background: #0077c0;
   border: 1px solid transparent;
   transition: all 150ms ease-in-out;
-  padding: 0.6rem 1rem;
   border-radius: 6px;
   color: white;
   cursor: pointer;
@@ -258,11 +257,10 @@ button.forward-button:hover {
 
 .btn-danger {
   background: #fa0536;
-  padding: 0.4rem 0.7rem;
-  border-radius: 6px;
-  border: none;
-  color: white;
+  border: 1px solid transparent;
   transition: all 150ms ease-in-out;
+  border-radius: 6px;
+  color: white;
   cursor: pointer;
 }
 .btn-danger:hover {
@@ -291,7 +289,7 @@ button.forward-button:hover {
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  color:#333;
+  color: #333;
 }
 
 .modal-input {

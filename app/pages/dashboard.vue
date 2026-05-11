@@ -20,7 +20,11 @@
               @submit="handleSubmit"
             />
           </div>
-          <UsersTable :users="users" @delete="deleteUser" @edit="editUser" />
+          <UsersTable
+            :users="users"
+            @delete="(id) => deleteUser(id)"
+            @edit="(id) => editUser(id)"
+          />
         </div>
       </section>
     </div>
@@ -114,7 +118,7 @@
     return { validIds, invalidIds }
   }
 
-  const editUser = async (id) => {
+  async function editUser(id) {
     try {
       const user = users.value.find((u) => u.id === id)
       if (!user) {
@@ -135,8 +139,11 @@
         body: { role: newRole },
       })
 
+      user.role = newRole
+
       toast.add({ title: 'Role Updated', description: 'Role update was successful', color: 'blue' })
     } catch (err) {
+      console.log(err)
       if (err?.statusCode === 403) {
         toast.add({
           title: 'Error',
@@ -147,5 +154,10 @@
         toast.add({ title: 'Error', description: 'Role update failed', color: 'red' })
       }
     }
+  }
+
+  // update user
+  async function deleteUser(id) {
+    users.value = users.value.filter((user) => user.id !== id)
   }
 </script>
