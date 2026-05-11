@@ -10,10 +10,10 @@ async function main() {
 	console.log('Start seeding...')
 
 	const user1 = await prisma.user.upsert({
-		where: {email: 'amy210001@gmail.com'},
+		where: {email: 'email101@duck.com'},
 		update: {},
 		create: {
-			email: 'amy210001@gmail.com',
+			email: 'email101@duck.com',
 			role: 'ADMIN'
 		}
 	})
