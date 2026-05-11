@@ -2,8 +2,6 @@ import { defineEventHandler, readBody } from 'h3'
 import { join } from 'path'
 import { readFileSync } from 'fs'
 import PizZip from 'pizzip'
-import archiver from 'archiver'
-import { PassThrough } from 'stream'
 
 const TEMPLATES_DIR = join(process.cwd(), 'public', 'templates')
 
@@ -21,6 +19,7 @@ const TEMPLATES: Record<string, { atRisk: string; typical: string } | { single: 
 
 // 8-18mo: at risk if WU or WP <= 20th pct. 16-30mo: WP only
 function isAtRisk(formType: string, row: Record<string, any>): boolean {
+  console.log('[isAtRisk]', row.chname_reg, '| WU:', row.WU_Precentile, '| WP:', row.WP_Percentile)
   if (formType.startsWith('engOther')) return false
 
   const wu = row.WU_Precentile
@@ -36,12 +35,15 @@ function isAtRisk(formType: string, row: Record<string, any>): boolean {
   return atRiskValue(wp)
 }
 
-// Format date string to spelled-out format like March 5, 2026
+// Format date as MM/DD/YYYY
 function formatDate(val: string): string {
   if (!val) return ''
   const d = new Date(val)
   if (isNaN(d.getTime())) return val
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  const m   = d.getMonth() + 1
+  const day = d.getDate()
+  const y   = d.getFullYear()
+  return `${m}/${day}/${y}`
 }
 
 // Escape special characters before inserting into XML
@@ -120,7 +122,7 @@ function getPositionalValues(formType: string, row: Record<string, any>): string
 }
 
 // Fills a Word template with child data via direct XML string replacements
-function fillTemplate(templatePath: string, row: Record<string, any>, formType: string): Buffer {
+function fillTemplate(templatePath: string, row: Record<string, any>, formType: string, programName: string): Buffer {
   const content = readFileSync(templatePath, 'binary')
   const zip = new PizZip(content)
   let xml = zip.file('word/document.xml')!.asText()
@@ -138,23 +140,33 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
   ))
   const dateOfReport = xmlEscape(formatDate(new Date().toISOString().split('T')[0]))
 
+  // Gender labels for Spanish and Mandarin pages
+  const genderES = gender === 'Girl' ? 'Ni\u00f1a' : gender === 'Boy' ? 'Ni\u00f1o' : gender
+  const genderZH = gender === 'Girl' ? '\u5973'    : gender === 'Boy' ? '\u7537'    : gender
+
   // Word sometimes splits 'ENTERnumber' across two runs — merge before replacing
   xml = xml.replace(
     /(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)ENTER(<\/w:t><\/w:r>)(<w:r\b[^>]*><w:rPr>(?:(?!<\/w:r>).)*?<\/w:rPr><w:t[^>]*>)number(<\/w:t><\/w:r>)/g,
     '$3ENTERnumber$4'
   )
 
-  // Replace name, gender, age placeholders
+  // Targeted replacements BEFORE global xx — so Mandarin cells get correct values
+  // English gender cell
+  xml = xml.replace(/(Gender(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${gender}${c}`)
+  // Spanish gender cell → Niño/Niña
+  xml = xml.replace(/(G[eé]nero(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${genderES}${c}`)
+  // Mandarin gender cell → 男/女
+  xml = xml.replace(/(性别[\s\S]{0,600}?<w:highlight[^>]*\/>[\s\S]{0,100}?<w:t[^>]*>)xx(<\/w:t>)/, (_, b, c) => `${b}${genderZH}${c}`)
+  // English age cell
+  xml = xml.replace(/(Age[\s\S]*?months[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${age}${c}`)
+  // Spanish age cell
+  xml = xml.replace(/(Edad[\s\S]*?meses[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${age}${c}`)
+  // Mandarin age cell
+  xml = xml.replace(/(月龄[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)xx(<\/w:t>)/, (_, b, c) => `${b}${age}${c}`)
+
+  // Global xx → fullName (runs after targeted cells already handled)
   xml = xml.replace(/(<w:t[^>]*>)xx(<\/w:t>)/g,  (_, o, c) => `${o}${fullName}${c}`)
   xml = xml.replace(/(<w:t[^>]*>)xxx(<\/w:t>)/g, (_, o, c) => `${o}${gender}${c}`)
-
-  // Gender and Género cells also use 'xx' so target them specifically after name replacement
-  xml = xml.replace(/(Gender(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${gender}${c}`)
-  xml = xml.replace(/(G[eé]nero(?::)?[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${gender}${c}`)
-
-  // Age and Edad cells also use 'xx'
-  xml = xml.replace(/(Age[\s\S]*?months[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/,  (_, b, _c, c) => `${b}${age}${c}`)
-  xml = xml.replace(/(Edad[\s\S]*?meses[\s\S]*?<w:highlight[^>]*\/>[\s\S]*?<w:t[^>]*>)([^<]*?)(<\/w:t>)/, (_, b, _c, c) => `${b}${age}${c}`)
 
   // XX date placeholders in order: Date of Report, Date of MCDI, Birth Date — doubled for bilingual templates
   const dateValues = [dateOfReport, dateOfMcdi, birthDate, dateOfReport, dateOfMcdi, birthDate]
@@ -169,6 +181,7 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
 
   let valueIdx = 0
   xml = xml.replace(/(<w:t[^>]*>)ENTERnumber(<\/w:t>)/g, (_, o, c) => `${o}${xmlEscape(allValues[valueIdx++] ?? '')}${c}`)
+  xml = xml.replace(/(<w:t[^>]*>)\[\s*\](<\/w:t>)/g, (_, o, c) => `${o}${programName}${c}`)
 
   zip.file('word/document.xml', xml)
   return zip.generate({ type: 'nodebuffer' }) as Buffer
@@ -176,54 +189,41 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { formType, outputRows, selectedIndices } = body
+  const { formType, outputRows, selectedIndices, programName } = body
 
   console.log('[generate-reports] Form type:', formType)
   console.log('[generate-reports] Selected indices:', selectedIndices)
   console.log('[generate-reports] Output rows received:', outputRows?.length)
+  console.log('[generate-reports] Program name: ', programName)
 
   const templateConfig = TEMPLATES[formType]
   if (!templateConfig) {
     return { success: false, message: `Unknown form type: ${formType}` }
   }
 
-  // Build zip in memory, one filled docx per selected row
-  const passThrough = new PassThrough()
-  const archive = archiver('zip', { zlib: { level: 6 } })
-  archive.pipe(passThrough)
+  // Build zip synchronously using PizZip — no streams, no race conditions
+  const outputZip = new PizZip()
 
   for (const idx of selectedIndices) {
     const row = outputRows[idx]
     if (!row) continue
 
-    let templateFile: string
-    if ('single' in templateConfig) {
-      templateFile = templateConfig.single
-    } else {
-      templateFile = isAtRisk(formType, row) ? templateConfig.atRisk : templateConfig.typical
-    }
+    const templateFile = 'single' in templateConfig
+      ? templateConfig.single
+      : isAtRisk(formType, row) ? templateConfig.atRisk : templateConfig.typical
 
     const templatePath = join(TEMPLATES_DIR, templateFile)
-    const docBuffer = fillTemplate(templatePath, row, formType)
+    const docBuffer = fillTemplate(templatePath, row, formType, programName)
 
     const firstName = (row.chname_reg ?? 'Unknown').replace(/\s+/g, '_')
     const lastName  = (row.chlname_reg ?? 'Unknown').replace(/\s+/g, '_')
-    archive.append(docBuffer, { name: `${firstName}_${lastName}_${formType}.docx` })
+    outputZip.file(`${firstName}_${lastName}_${formType}.docx`, docBuffer)
   }
 
-  await archive.finalize()
-
-  // Collect zip stream into buffer and return as base64
-  const chunks: Buffer[] = []
-  await new Promise<void>((resolve, reject) => {
-    passThrough.on('data', (chunk) => chunks.push(chunk))
-    passThrough.on('end', resolve)
-    passThrough.on('error', reject)
-  })
-
-  const base64   = Buffer.concat(chunks).toString('base64')
-  const today    = new Date().toISOString().split('T')[0]
-  const fileName = `${formType}_reports_${today}.zip`
+  const zipBuffer = outputZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' })
+  const base64    = zipBuffer.toString('base64')
+  const today     = new Date().toISOString().split('T')[0]
+  const fileName  = `${formType}_reports_${today}.zip`
 
   console.log('[generate-reports] Zip generated:', fileName)
   return { success: true, fileName, base64 }

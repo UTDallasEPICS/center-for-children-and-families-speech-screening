@@ -2,7 +2,6 @@
   import { authClient } from './utils/auth-client'
   import { computed, watch } from 'vue'
 
-
   //Auth Setup
   const sessionResult = authClient.useSession()
   const session = computed(() => sessionResult.value?.data ?? null)
@@ -28,6 +27,9 @@
     await authClient.signOut()
     await navigateTo('/auth')
   }
+
+  //user manual setup
+  const showManual = ref(false)
 </script>
 
 <template>
@@ -39,7 +41,7 @@
           <div class="flex items-center gap-2">
             <img src="/ccf-logo.png" alt="Center for Children and Families" class="h-12" />
             <div class="border-l border-gray-200 pl-2">
-              <p class="text-xs leading-tight font-semibold text-main-blue">
+              <p class="text-main-blue text-xs leading-tight font-semibold">
                 MCDI Percentile Calculator
               </p>
             </div>
@@ -50,20 +52,39 @@
             v-if="displayUser && (route.path === '/' || route.path === '/dashboard')"
             class="flex items-center gap-4"
           >
+            <!-- Admin dashboard button -->
+            <UButton
+              icon="i-heroicons-user-group"
+              variant="subtle"
+              color="info"
+              v-if="displayUser.role !== 'STUDENT'"
+              @click="useRouter().push(route.path === '/dashboard' ? '/' : '/dashboard')"
+            >
+              {{ route.path === '/dashboard' ? 'Return to MCDI' : 'Manage Users' }}
+            </UButton>
+
+            <!-- website manuel -->
+            <UButton
+              icon="i-heroicons-book-open"
+              variant="subtle"
+              color="neutral"
+              @click="showManual = true"
+            >
+              User Manual
+            </UButton>
+            <userManualModal v-model:showManual="showManual" />
+
             <div class="flex items-center gap-2">
               <div class="text-right">
                 <p class="font-mediumg text-sm text-gray-700">{{ displayUser.email }}</p>
-                <p class="text-[10px] font-semibold tracking-wider text-confirmation-green uppercase">
+                <p
+                  class="text-confirmation-green text-[10px] font-semibold tracking-wider uppercase"
+                >
                   {{ displayUser.role }}
                 </p>
               </div>
             </div>
-            <UButton
-              icon="i-heroicons-cog-6-tooth"
-              variant="ghost"
-              color="neutral"
-              @click="navigateTo('/dashboard')"
-            />
+
             <!-- handles sign out logic -->
             <UButton variant="link" color="neutral" size="sm" @click="signOut">Sign Out</UButton>
           </div>
@@ -71,17 +92,16 @@
       </header>
 
       <!-- PAGE CONTENT -->
-      <main class="flex-1">
+      <main class="">
         <NuxtPage />
       </main>
 
       <!-- FOOTER -->
       <footer class="mt-auto border-t border-gray-200 bg-white">
-        <div class="mx-auto max-w-[90rem] flex-center-JusBetween px-6 py-6">
+        <div class="flex-center-JusBetween mx-auto max-w-[90rem] px-6 py-6">
           <div class="footnote-text">
             &copy; 2026 Center for Children and Families &middot; University of Texas at Dallas
           </div>
-
         </div>
       </footer>
     </div>
