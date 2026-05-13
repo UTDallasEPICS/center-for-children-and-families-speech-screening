@@ -412,22 +412,21 @@ function processFile(file: File) {
       }
       //convert to csv string — SheetJS handles date formatting etc
       const csv = utils.sheet_to_csv(sheet as NonNullable<typeof sheet>)
-      parseCSVText(csv, true)
+      parseCSVText(csv)
     }
     reader.readAsArrayBuffer(file)
   } else {
     //file reader logic for csv
     reader.onload = (e) => {
       const text = e.target?.result as string
-      parseCSVText(text, false)
+      parseCSVText(text)
     }
     reader.readAsText(file)
   }
 }
 
   //shared csv parsing logic used for both native csv and xlsx-converted-to-csv
-  //skipSecondRow: true for xlsx input templates which have a label row after headers
-  function parseCSVText(text: string, skipSecondRow: boolean) {
+  function parseCSVText(text: string) {
     //grab info and trim
     const lines = text.trim().split('\n')
     //no headers!
@@ -444,8 +443,7 @@ function processFile(file: File) {
     if (!headerLine) return
     const csvRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/
     columns.value = headerLine.split(csvRegex).map((h) => h.trim())
-    //skip row 2 if xlsx (the "for percentile calculation" label row in the Excel input template)
-    const dataLines = skipSecondRow ? lines.slice(2) : lines.slice(1)
+    const dataLines = lines.slice(1)
     const parsedRows = dataLines
       .map((line) => {
         const values = line.split(csvRegex)
