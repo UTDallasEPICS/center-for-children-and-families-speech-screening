@@ -136,7 +136,7 @@ function fillTemplate(templatePath: string, row: Record<string, any>, formType: 
     row.mcdi_english_short_form_1630_months_timestamp ||
     row.mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp  ||
     row.mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp  ||
-    row.mcdimandarin_timestamp || ''
+    row.mcdimandarin_timestamp || row.language_environment_percentage_timestamp || ''
   ))
   const dateOfReport = xmlEscape(formatDate(new Date().toISOString().split('T')[0]))
 
