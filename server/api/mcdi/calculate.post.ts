@@ -206,6 +206,7 @@ export default defineEventHandler(async (event) => {
         total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
         ...pcts,
         mcdi_english_short_form_818_months_timestamp: row.mcdi_english_short_form_818_months_timestamp ?? '',
+        language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
       }
     })
   }
@@ -231,6 +232,7 @@ export default defineEventHandler(async (event) => {
         es2_english_total_mon: row.es2_english_total_mon ?? '',
         ...pcts,
         mcdi_english_short_form_1630_months_timestamp: row.mcdi_english_short_form_1630_months_timestamp ?? '',
+        language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
       }
     })
   }
@@ -262,6 +264,7 @@ export default defineEventHandler(async (event) => {
         total_expressive:      row.total_expressive      ?? '',
         ...pcts,
         mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp: row.mcdi_spanishenglish_short_form_with_ces_8_18_month_timestamp ?? '',
+        language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
       }
     })
   }
@@ -289,6 +292,7 @@ export default defineEventHandler(async (event) => {
         total_span_eng_expressive: row.total_span_eng_expressive ?? '',
         ...pcts,
         mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp: row.mcdi_spanishenglish_short_form_with_ces_16_30_mont_timestamp ?? '',
+        language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
       }
     })
   }
@@ -320,6 +324,7 @@ export default defineEventHandler(async (event) => {
         total_expressive: totalWP,
         ...pcts,
         mcdimandarin_timestamp: row.mcdimandarin_timestamp ?? '',
+        language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
       }
     })
   }
@@ -347,6 +352,7 @@ export default defineEventHandler(async (event) => {
         total_expressive: totalWP,
         ...pcts,
         mcdimandarin_timestamp: row.mcdimandarin_timestamp ?? '',
+        language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
       }
     })
   }
@@ -369,6 +375,7 @@ export default defineEventHandler(async (event) => {
       total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
       mcdi_english_short_form_818_months_timestamp:  row.mcdi_english_short_form_818_months_timestamp  ?? '',
       mcdi_english_short_form_1630_months_timestamp: row.mcdi_english_short_form_1630_months_timestamp ?? '',
+      language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
     }))
   }
 
@@ -387,6 +394,7 @@ export default defineEventHandler(async (event) => {
       language:      row.language      ?? '',
       specify_language:         row.specify_language         ?? '',
       total_expressive_eng_mon: row.total_expressive_eng_mon ?? '',
+      language_environment_percentage_timestamp: row.language_environment_percentage_timestamp,
     }))
   }
 
